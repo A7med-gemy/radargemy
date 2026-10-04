@@ -1,0 +1,3971 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Unified Trader v1.0 — Dashboard + Scanner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a; --card:#0f1525; --bd:#1e293b; --tx:#e6e9f0; --mut:#64748b;
+  --g:#10b981; --r:#f43f5e; --y:#fbbf24; --b:#22d3ee; --p:#a855f7;
+}
+*{box-sizing:border-box}
+body{
+  font-family:'Cairo',system-ui,sans-serif; background:var(--bg); color:var(--tx);
+  margin:0; padding:0; -webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(1100px 480px at 85% -10%,#1b2a4a66,transparent);
+}
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+
+/* Animations */
+@keyframes pulse-gold{0%,100%{box-shadow:0 0 20px rgba(251,191,36,.3)}50%{box-shadow:0 0 30px rgba(251,191,36,.6)}}
+@keyframes pulse-purple{0%,100%{box-shadow:0 0 15px rgba(168,85,247,.3)}50%{box-shadow:0 0 25px rgba(168,85,247,.6)}}
+@keyframes pulse-cyan{0%,100%{box-shadow:0 0 15px rgba(34,211,238,.3)}50%{box-shadow:0 0 25px rgba(34,211,238,.6)}}
+@keyframes flashUp{0%{background:rgba(16,185,129,.35)}100%{background:transparent}}
+@keyframes flashDown{0%{background:rgba(244,63,94,.35)}100%{background:transparent}}
+@keyframes spin{100%{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes livepulse{50%{opacity:.2}}
+
+.gold-glow{animation:pulse-gold 2.5s ease-in-out infinite}
+.early-glow{animation:pulse-purple 2.5s ease-in-out infinite}
+.growing-glow{animation:pulse-cyan 2.5s ease-in-out infinite}
+.price-flash-up{animation:flashUp .5s ease-out}
+.price-flash-down{animation:flashDown .5s ease-out}
+.spinner{animation:spin 1s linear infinite;display:inline-block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:0 4px 20px #0006}
+.card-gold{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(15,21,37,1));border:2px solid rgba(251,191,36,.5)}
+.card-early{background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(15,21,37,1));border:1px solid rgba(168,85,247,.4)}
+.card-growing{background:linear-gradient(135deg,rgba(34,211,238,.1),rgba(15,21,37,1));border:1px solid rgba(34,211,238,.4)}
+.card-peak{background:linear-gradient(135deg,rgba(244,63,94,.1),rgba(15,21,37,1));border:1px solid rgba(244,63,94,.4)}
+.card-confirmed{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(15,21,37,1));border:2px solid rgba(16,185,129,.6);animation:pulse-gold 3s ease-in-out infinite}
+
+/* KPI */
+.kpi{background:linear-gradient(180deg,#182036,#121724);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;cursor:pointer;transition:all .15s}
+.kpi:hover{transform:translateY(-2px);border-color:var(--b);box-shadow:0 4px 12px #22d3ee33}
+.kpi span{display:block;color:var(--mut);font-size:10px;margin-bottom:2px}
+.kpi b{font-size:20px}
+
+/* Tabs */
+.tab-active{background:var(--g);color:#0a0e1a;font-weight:800}
+.tab-inactive{background:#1e293b;color:#94a3b8}
+.tab-inactive:hover{background:#334155}
+
+/* Badges */
+.badge{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.badge-GOLD{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0a0e1a}
+.badge-BUY{background:#10b98122;color:#10b981}
+.badge-EARLY{background:#a855f722;color:#a855f7}
+.badge-CONFIRMED{background:linear-gradient(135deg,#10b981,#22d3ee);color:#0a0e1a;animation:pulse-cyan 2s infinite}
+.badge-CONFLICT{background:#f43f5e22;color:#f43f5e;border:1px solid #f43f5e}
+.badge-PENDING{background:#fbbf2422;color:#fbbf24}
+
+.phase{padding:3px 8px;border-radius:6px;font-size:9px;font-weight:800}
+.phase-EARLY{background:rgba(168,85,247,.25);color:#c4b5fd}
+.phase-GROWING{background:rgba(34,211,238,.25);color:#67e8f9}
+.phase-BREAKOUT{background:rgba(251,191,36,.25);color:#fcd34d}
+.phase-PEAK{background:rgba(244,63,94,.25);color:#fda4af}
+.phase-EMERGING{background:rgba(6,182,212,.25);color:#67e8f9}
+.phase-NEUTRAL{background:#1e293b;color:#64748b}
+
+/* Metric boxes */
+.metric-box{background:#0a0e1a;border:1px solid var(--bd);border-radius:8px;padding:6px 4px;text-align:center}
+.metric-box .lbl{font-size:9px;color:var(--mut);display:block;margin-bottom:2px}
+.metric-box .val{font-size:13px;font-weight:700;font-family:monospace}
+
+/* Score bar */
+.score-bar{height:4px;border-radius:2px;background:var(--bd);overflow:hidden}
+.score-bar-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--y))}
+
+/* Live dot */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block;animation:livepulse 1.4s infinite}
+.live-dot.ws-on{background:var(--b);box-shadow:0 0 8px var(--b)}
+
+/* Gate badges */
+.gate{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700}
+.gate-pass{background:rgba(16,185,129,.2);color:#10b981}
+.gate-fail{background:rgba(244,63,94,.2);color:#f43f5e}
+
+/* Strength badges */
+.str-strong{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.str-medium{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0a0e1a}
+.str-weak{background:#1e293b;color:#64748b}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--mut);font-weight:500;text-align:right;padding:8px 6px;border-bottom:1px solid var(--bd);font-size:10px;letter-spacing:.03em}
+td{padding:8px 6px;border-bottom:1px solid #1a2132;white-space:nowrap}
+tr.row{cursor:pointer}
+tr.row:hover{background:#182033}
+.n{direction:ltr;text-align:right;unicode-bidi:isolate}
+
+/* Buttons */
+button{cursor:pointer;font-family:inherit}
+button.s{background:#0e1320;border:1px solid var(--bd);color:var(--tx);padding:2px 8px;border-radius:6px;font-size:11px}
+
+/* Inputs */
+input,select{background:#0e1320;color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;font:inherit;font-size:12px}
+input:focus,select:focus{outline:none;border-color:var(--b)}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:#000c;z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+.modal.on{display:flex}
+.modal-inner{background:var(--card);border:1px solid var(--bd);border-radius:14px;max-width:1200px;width:100%;max-height:90vh;overflow:auto;animation:slideUp .3s}
+.modal-hd{display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--card);z-index:10}
+
+/* Progress */
+.progress-container{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;margin-top:8px;display:none}
+.progress-container.active{display:block}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--g),var(--b),var(--y));transition:width .3s}
+
+/* Header */
+.hd{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bd);background:#0a0e1aee;backdrop-filter:blur(10px);position:sticky;top:0;z-index:50}
+
+/* Canvas */
+canvas{width:100%;height:660px;touch-action:pan-y;cursor:crosshair;display:block;margin-top:8px}
+
+/* Sparkline */
+.sparkline{height:30px;width:100%}
+
+/* Tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin:8px 0}
+.tile{background:#0e1320;border:1px solid var(--bd);border-radius:8px;padding:6px 8px}
+.tile span{display:block;color:var(--mut);font-size:10px}
+.tile b{font-size:13px}
+
+/* Sector bar */
+.sector-bar{height:22px;border-radius:4px;position:relative;overflow:hidden;background:var(--bd)}
+.sector-fill{height:100%;transition:width .3s}
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER ==================== -->
+<header class="hd">
+  <div class="flex items-center gap-3">
+    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center">
+      <i class="fa-solid fa-radar animate-pulse text-lg"></i>
+    </div>
+    <div>
+      <h1 class="text-base font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-300">🎯 Unified Trader v1.0</h1>
+      <p class="text-[10px] text-slate-400">Dashboard v7 + Scanner v5.4.1 • RSI Live • Dual RVOL • Cross-Validation</p>
+    </div>
+  </div>
+  <div class="flex items-center gap-2 flex-wrap">
+    <span id="ws-status" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1.5 font-mono">
+      <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>WS: —
+    </span>
+    <span id="api-status" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>جاهز
+    </span>
+    <span id="price-age" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+      <i class="fa-solid fa-clock mr-1"></i><span id="price-age-text">—</span>
+    </span>
+    <span id="regime-badge" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+      <i class="fa-solid fa-gauge-high mr-1"></i><span id="regime-text">—</span>
+    </span>
+    <button onclick="scanMarkets()" id="refresh-btn" class="p-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs" title="مسح الآن">
+      <i class="fa-solid fa-rotate"></i>
+    </button>
+    <button onclick="toggleAudio()" id="audio-btn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs">
+      <i id="audio-icon" class="fa-solid fa-volume-high text-emerald-400"></i>
+    </button>
+  </div>
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+</header>
+
+<!-- ==================== KPIs ==================== -->
+<div class="max-w-7xl w-full mx-auto px-4 pt-4">
+  <div class="grid grid-cols-2 md:grid-cols-7 gap-3" id="kpis">
+    <div class="kpi" onclick="openCategoryModal('confirmed')">
+      <span><i class="fa-solid fa-shield-check text-emerald-400 mr-1"></i>مؤكدة 🔒</span>
+      <b class="text-emerald-400 font-mono" id="stat-confirmed">0</b>
+      <p class="text-[8px] text-slate-600 mt-1">👆 Cross-Validated</p>
+    </div>
+    <div class="kpi" onclick="openCategoryModal('gold')">
+      <span><i class="fa-solid fa-crown text-amber-400 mr-1"></i>GOLD</span>
+      <b class="text-amber-400 font-mono" id="stat-gold">0</b>
+      <p class="text-[8px] text-slate-600 mt-1">👆 للتفاصيل</p>
+    </div>
+    <div class="kpi" onclick="openCategoryModal('early')">
+      <span><i class="fa-solid fa-bolt text-purple-400 mr-1"></i>مبكر</span>
+      <b class="text-purple-400 font-mono" id="stat-early">0</b>
+      <p class="text-[8px] text-slate-600 mt-1">👆 للتفاصيل</p>
+    </div>
+    <div class="kpi" onclick="openCategoryModal('growing')">
+      <span><i class="fa-solid fa-seedling text-cyan-400 mr-1"></i>نمو</span>
+      <b class="text-cyan-400 font-mono" id="stat-growing">0</b>
+      <p class="text-[8px] text-slate-600 mt-1">👆 للتفاصيل</p>
+    </div>
+    <div class="kpi" onclick="openCategoryModal('peak')">
+      <span><i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1"></i>ذروة</span>
+      <b class="text-rose-400 font-mono" id="stat-peak">0</b>
+      <p class="text-[8px] text-slate-600 mt-1">👆 للتفاصيل</p>
+    </div>
+    <div class="kpi">
+      <span><i class="fa-solid fa-database text-indigo-400 mr-1"></i>مفحوصة</span>
+      <b class="text-indigo-400 font-mono" id="stat-scanned">0</b>
+    </div>
+    <div class="kpi">
+      <span><i class="fa-solid fa-fire text-rose-400 mr-1"></i>قطاع ساخن</span>
+      <b class="text-rose-400 font-mono text-sm truncate" id="stat-hot-sector">—</b>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TIMEFRAME SELECTOR ==================== -->
+<div class="max-w-7xl w-full mx-auto px-4 pt-4">
+  <div class="flex gap-2 justify-center flex-wrap">
+    <span class="text-[10px] text-slate-500 self-center"><i class="fa-solid fa-chart-line mr-1"></i>فريم التداول:</span>
+    <button onclick="setTradeTimeframe('5m')" id="tf-btn-5m" class="px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-[10px] font-bold">5M</button>
+    <button onclick="setTradeTimeframe('15m')" id="tf-btn-15m" class="px-3 py-1 bg-emerald-500 text-slate-950 rounded-full text-[10px] font-bold">15M ⭐</button>
+    <button onclick="setTradeTimeframe('1h')" id="tf-btn-1h" class="px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-[10px] font-bold">1H</button>
+    <button onclick="setTradeTimeframe('4h')" id="tf-btn-4h" class="px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-[10px] font-bold">4H</button>
+  </div>
+</div>
+
+<!-- ==================== TABS ==================== -->
+<div class="max-w-7xl w-full mx-auto px-4 pt-4">
+  <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2">
+    <button onclick="switchTab('signals')" id="tab-signals" class="tab-active px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-bullseye mr-1"></i> إشارات موحّدة <span id="signals-count-badge" class="text-[9px] bg-emerald-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('confirmed')" id="tab-confirmed" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-shield-check mr-1"></i> مؤكدة <span id="confirmed-count-badge" class="text-[9px] bg-emerald-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('earlywave')" id="tab-earlywave" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-water mr-1"></i> Early Wave
+    </button>
+    <button onclick="switchTab('emerging')" id="tab-emerging" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-seedling mr-1"></i> ناشئة <span id="emerging-count-badge" class="text-[9px] bg-cyan-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('growing')" id="tab-growing" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-arrow-up-right-dots mr-1"></i> نمو <span id="growing-count-badge" class="text-[9px] bg-cyan-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('early')" id="tab-early" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-bolt mr-1"></i> مبكر
+    </button>
+    <button onclick="switchTab('peaks')" id="tab-peaks" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-triangle-exclamation mr-1"></i> تحذيرات <span id="peaks-count-badge" class="text-[9px] bg-rose-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('sectors')" id="tab-sectors" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-layer-group mr-1"></i> قطاعات
+    </button>
+    <button onclick="switchTab('deep')" id="tab-deep" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-chart-area mr-1"></i> تحليل عميق
+    </button>
+    <button onclick="switchTab('gainers')" id="tab-gainers" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-arrow-trend-up mr-1"></i> الأعلى
+    </button>
+    <button onclick="switchTab('all')" id="tab-all" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-table-list mr-1"></i> الكل
+    </button>
+    <button onclick="switchTab('watchlist')" id="tab-watchlist" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-star mr-1"></i> مفضلة <span id="watchlist-count-badge" class="text-[9px] bg-emerald-500 text-slate-950 rounded-full px-1.5 py-0.5 ml-1">0</span>
+    </button>
+    <button onclick="switchTab('history')" id="tab-history" class="tab-inactive px-4 py-2.5 text-xs font-bold rounded-lg shrink-0">
+      <i class="fa-solid fa-clock-rotate-left mr-1"></i> سجل
+    </button>
+  </div>
+</div>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<main class="max-w-7xl w-full mx-auto p-4 flex-grow">
+
+  <!-- 1) SIGNALS (Unified) -->
+  <div id="panel-signals" class="tab-panel">
+    <div id="signals-list" class="flex flex-col gap-4">
+      <div class="card p-12 text-center text-slate-500">
+        <i class="fa-solid fa-satellite-dish text-3xl mb-3 animate-pulse block"></i>
+        <p>جاري المسح الأولي...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2) CONFIRMED (Cross-Validated) -->
+  <div id="panel-confirmed" class="tab-panel hidden">
+    <div class="card-confirmed p-4 mb-4">
+      <h3 class="text-sm font-bold text-emerald-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-shield-check"></i> إشارات مؤكدة (Cross-Validated)
+      </h3>
+      <p class="text-[10px] text-slate-400 leading-relaxed">
+        اتفاق scanner5 (GOLD/EARLY) مع Dashboard v7 (ENTRY/READY) + لا تحذيرات + R:R ≥ 2
+      </p>
+    </div>
+    <div id="confirmed-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">جاري الرصد...</p>
+    </div>
+  </div>
+
+  <!-- 3) EARLY WAVE (Dashboard v7) -->
+  <div id="panel-earlywave" class="tab-panel hidden">
+    <div class="card-early p-4 mb-4">
+      <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-water"></i> Early Wave (4H+1H+15M)
+      </h3>
+      <p class="text-[10px] text-slate-400 leading-relaxed">
+        ENTRY = كل الشروط + تدفق مباشر · READY = 7/10 + (BOS أو Sweep) · ACCUMULATION = تجميع خفي
+      </p>
+    </div>
+    <div id="earlywave-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">جاري الرصد...</p>
+    </div>
+  </div>
+
+  <!-- 4) EMERGING (Scanner5) -->
+  <div id="panel-emerging" class="tab-panel hidden">
+    <div class="card-growing p-4 mb-4">
+      <h3 class="text-sm font-bold text-cyan-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-seedling"></i> الفرص الناشئة
+      </h3>
+      <p class="text-[10px] text-slate-400">RVOL 0.4-1.2x + CVD موجب + Taker متوازن + Squeeze</p>
+    </div>
+    <div id="emerging-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">جاري الرصد...</p>
+    </div>
+  </div>
+
+  <!-- 5) GROWING (Scanner5) -->
+  <div id="panel-growing" class="tab-panel hidden">
+    <div class="card-growing p-4 mb-4">
+      <h3 class="text-sm font-bold text-cyan-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-up-right-dots"></i> مرحلة النمو - Growing
+      </h3>
+      <p class="text-[10px] text-slate-400">RVOL 1.2-2.5x + CVD Slope موجب + Taker 52-68% + RSI 50-72</p>
+    </div>
+    <div id="growing-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">جاري الرصد...</p>
+    </div>
+  </div>
+
+  <!-- 6) EARLY (Scanner5) -->
+  <div id="panel-early" class="tab-panel hidden">
+    <div class="card-early p-4 mb-4">
+      <h3 class="text-sm font-bold text-purple-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-bolt"></i> الكشف المبكر
+      </h3>
+      <p class="text-[10px] text-slate-400">RVOL ≥ 0.8x + Taker 52-70% + RSI < 75 + صعود ≤ 5%</p>
+    </div>
+    <div id="early-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">جاري الرصد...</p>
+    </div>
+  </div>
+
+  <!-- 7) PEAKS (Warnings) -->
+  <div id="panel-peaks" class="tab-panel hidden">
+    <div class="card-peak p-4 mb-4">
+      <h3 class="text-sm font-bold text-rose-300 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-triangle-exclamation"></i> تحذيرات (Peak + Late)
+      </h3>
+      <p class="text-[10px] text-slate-400">RSI > 80 · Taker > 72% · 24س > 15% · NW Overbought</p>
+    </div>
+    <div id="peaks-list" class="flex flex-col gap-3">
+      <p class="text-slate-500 text-sm text-center py-8">لا توجد تحذيرات</p>
+    </div>
+  </div>
+
+  <!-- 8) SECTORS -->
+  <div id="panel-sectors" class="tab-panel hidden">
+    <div class="card p-4 mb-4">
+      <h3 class="text-sm font-bold text-cyan-400 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i> أداء القطاعات (24 ساعة)
+      </h3>
+    </div>
+    <div id="sectors-chart" class="card p-4 mb-4"><p class="text-slate-500 text-sm text-center py-4">جاري التحميل...</p></div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead class="bg-slate-950">
+            <tr>
+              <th class="px-3 py-3">#</th>
+              <th class="px-3 py-3">القطاع</th>
+              <th class="px-3 py-3">متوسط 24س%</th>
+              <th class="px-3 py-3">العملات</th>
+              <th class="px-3 py-3">إشارات</th>
+              <th class="px-3 py-3">الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="sectors-body">
+            <tr><td colspan="6" class="text-center py-8 text-slate-500">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="sector-details" class="card p-4 mt-4 hidden"></div>
+  </div>
+
+  <!-- 9) DEEP ANALYSIS (Dashboard v7 Canvas) -->
+  <div id="panel-deep" class="tab-panel hidden">
+    <div class="card p-4 mb-4">
+      <div class="flex gap-2 flex-wrap items-center">
+        <input id="deep-search" list="deep-dl" placeholder="🔎 ابحث عن عملة (BTC, SOL...)" class="flex-grow" style="min-width:200px">
+        <datalist id="deep-dl"></datalist>
+        <button onclick="openDeepAnalysis()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs">
+          <i class="fa-solid fa-search mr-1"></i> تحليل
+        </button>
+      </div>
+      <div class="ctl flex flex-wrap gap-3 mt-3 text-[10px]">
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="ema" checked class="w-auto">EMA 20/50/200</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="bb" class="w-auto">Bollinger</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="sr" checked class="w-auto">دعم/مقاومة</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="fvg" checked class="w-auto">FVG + Sweep</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="vp" checked class="w-auto">Volume Profile</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="nw" checked class="w-auto">NW</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="div" checked class="w-auto">تباعد RSI</label>
+        <label class="flex items-center gap-1 text-slate-400"><input type="checkbox" data-o="pat" checked class="w-auto">النماذج</label>
+        <label class="flex items-center gap-1 text-slate-400">h<input id="nwh" type="number" value="8" min="1" max="30" class="w-14"></label>
+        <label class="flex items-center gap-1 text-slate-400">×<input id="nwm" type="number" value="3" min="0.5" max="6" step="0.5" class="w-14"></label>
+        <select id="nwmode" class="text-[10px]"><option value="0">Endpoint</option><option value="1">Repaint</option></select>
+      </div>
+    </div>
+    <div id="deep-card"></div>
+    <canvas id="cv"></canvas>
+    <div id="deep-plan"></div>
+  </div>
+
+  <!-- 10) GAINERS -->
+  <div id="panel-gainers" class="tab-panel hidden">
+    <div class="card p-4 mb-4">
+      <h3 class="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-arrow-trend-up"></i> الأكثر ارتفاعاً (24 ساعة)
+      </h3>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto">
+        <table>
+          <thead class="bg-slate-950">
+            <tr>
+              <th>#</th><th>العملة</th><th>السعر</th><th>24س%</th><th>RVOL</th><th>الحجم</th>
+            </tr>
+          </thead>
+          <tbody id="gainers-body">
+            <tr><td colspan="6" class="text-center py-8 text-slate-500">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11) ALL COINS -->
+  <div id="panel-all" class="tab-panel hidden">
+    <div class="card p-4 mb-4">
+      <h3 class="text-sm font-bold text-indigo-400 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-table-list"></i> جميع العملات (<span id="all-count">0</span>)
+      </h3>
+      <div class="flex gap-2 flex-wrap">
+        <input type="text" id="all-search" placeholder="بحث..." oninput="renderAllCoins()" class="flex-grow" style="min-width:150px">
+        <select id="all-sort" onchange="renderAllCoins()">
+          <option value="unified">ترتيب: Unified Score</option>
+          <option value="score">ترتيب: Score</option>
+          <option value="early">ترتيب: Early</option>
+          <option value="phase">ترتيب: Phase</option>
+          <option value="change">ترتيب: 24س%</option>
+          <option value="rvol">ترتيب: RVOL</option>
+        </select>
+      </div>
+    </div>
+    <div class="card overflow-hidden">
+      <div class="overflow-x-auto max-h-[700px] overflow-y-auto">
+        <table style="min-width:1300px">
+          <thead class="bg-slate-950 sticky top-0 z-10">
+            <tr>
+              <th>#</th><th>العملة</th><th>السعر</th><th>24س%</th><th>Phase</th>
+              <th>Unified</th><th>Score</th><th>Early</th><th>Type</th>
+              <th>RVOL</th><th>Taker</th><th>RSI</th><th>ADX</th><th>الحجم</th>
+            </tr>
+          </thead>
+          <tbody id="all-body">
+            <tr><td colspan="14" class="text-center py-8 text-slate-500">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12) WATCHLIST -->
+  <div id="panel-watchlist" class="tab-panel hidden">
+    <div class="card p-4 mb-4">
+      <h3 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-star"></i> إضافة عملة للمفضلة الموحّدة
+      </h3>
+      <div class="flex gap-2">
+        <input type="text" id="quick-add-input" placeholder="مثال: INJ, PEPE, TIA" onkeypress="if(event.key==='Enter')quickAddPair()" class="flex-grow">
+        <button onclick="quickAddPair()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs">
+          <i class="fa-solid fa-plus mr-1"></i>إضافة
+        </button>
+      </div>
+    </div>
+    <div id="watchlist-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <p class="text-slate-500 text-sm text-center py-8 col-span-full">لا توجد عملات في المفضلة</p>
+    </div>
+  </div>
+
+  <!-- 13) HISTORY -->
+  <div id="panel-history" class="tab-panel hidden">
+    <div class="card p-4 mb-4 flex justify-between items-center flex-wrap gap-2">
+      <h3 class="text-sm font-bold text-indigo-400 flex items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left"></i> سجل الإشارات (مع Attribution)
+      </h3>
+      <button onclick="exportCSV()" class="px-3 py-1.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 rounded-lg text-[10px] font-bold">
+        <i class="fa-solid fa-download mr-1"></i> CSV
+      </button>
+    </div>
+    <div class="card p-4">
+      <div id="history-stats" class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3"></div>
+      <div class="card p-3 mb-3" id="attribution-box"></div>
+      <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+        <table style="min-width:1000px">
+          <thead class="bg-slate-950 sticky top-0">
+            <tr>
+              <th>الوقت</th><th>العملة</th><th>النوع</th><th>المصدر</th>
+              <th>Score</th><th>الدخول</th><th>الحالي</th><th>P&L%</th><th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <tr><td colspan="9" class="text-center py-8 text-slate-500">لا توجد إشارات</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ==================== TOAST ==================== -->
+<div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 border border-emerald-500/50 text-emerald-400 px-5 py-3 rounded-xl text-xs font-bold shadow-2xl z-50 pointer-events-none transition-opacity duration-300 max-w-[90%] text-center opacity-0">تم</div>
+
+<!-- ==================== CATEGORY MODAL ==================== -->
+<div id="categoryModal" class="modal" onclick="if(event.target===this)closeCategoryModal()">
+  <div class="modal-inner">
+    <div class="modal-hd">
+      <div class="flex items-center gap-3">
+        <div id="category-icon" class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"></div>
+        <div>
+          <h3 id="category-title" class="text-lg font-extrabold">—</h3>
+          <p id="category-subtitle" class="text-[10px] text-slate-400">—</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="category-count" class="text-sm font-bold text-slate-300 font-mono">0 عملة</span>
+        <button onclick="closeCategoryModal()" class="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg">
+          <i class="fa-solid fa-times text-lg"></i>
+        </button>
+      </div>
+    </div>
+    <div class="p-4">
+      <div id="category-body" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <p class="text-slate-500 text-center py-8 col-span-full">جاري التحميل...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCRIPT ==================== -->
+<script>
+'use strict';
+
+/* ==================================================================
+   ⚙️ CFG — Unified Trader v1.0
+   ================================================================== */
+const CFG = {
+  API: 'https://api.binance.com',
+  WS_BASE: 'wss://stream.binance.com:9443/stream?streams=',
+  WS_HOSTS: ['wss://stream.binance.com:9443', 'wss://data-stream.binance.vision'],
+  API_ENDPOINTS: [
+    'https://api.binance.com',
+    'https://data-api.binance.vision',
+    'https://api1.binance.com',
+    'https://api2.binance.com',
+    'https://api3.binance.com'
+  ],
+  
+  // Scan
+  MIN_QUOTE_VOL: 80000,
+  WATCHLIST_SIZE: 250,
+  REFRESH_MS: 120000,
+  LIVE_UPDATE_MS: 5000,
+  
+  // Kline / Depth
+  KLINE_LIMIT: 1000,
+  KLINE_LIMIT_SHORT: 120,
+  DEPTH_LIMIT: 20,
+  DEPTH_CACHE_MS: 30000,
+  KLINE_CACHE_TTL: 60000,
+  
+  // Concurrency
+  MAX_CONCURRENT_API: 15,
+  REQUEST_GAP_MS: 80,
+  PRICE_REFRESH_BATCH: 20,
+  
+  // Scores
+  ENTRY_SCORE: 58,
+  EARLY_SCORE: 62,
+  APLUS_SCORE: 72,
+  CONFIRMED_SCORE: 75,
+  CONFLICT_SCORE: 55,
+  
+  // Peaks
+  PEAK_RSI: 80,
+  PEAK_TAKER: 0.72,
+  
+  // Gates
+  GATE_MIN_RVOL: 0.8,
+  GATE_MIN_TAKER: 0.50,
+  GATE_MAX_TAKER: 0.70,
+  GATE_MIN_TAKER_SIGNAL: 0.52,
+  GATE_MIN_SWEEP_STRENGTH: 50,
+  GATE_MAX_RSI: 75,
+  GATE_MIN_CHANGE_24H: -3,
+  GATE_MAX_CHANGE_24H: 5,
+  
+  // Late Warnings
+  LATE_CHANGE_24H: 8,
+  VERY_LATE_CHANGE_24H: 15,
+  
+  // Emerging
+  EMERGING_MIN_RVOL: 0.4,
+  EMERGING_MAX_RVOL: 1.2,
+  EMERGING_MIN_CVD_SLOPE: 0,
+  EMERGING_MAX_CHANGE_24H: 3,
+  
+  // Signal History
+  MAX_SIGNAL_HISTORY: 300,
+  SIGNAL_COOLDOWN_MS: 3600000,
+  
+  // Min candles
+  MIN_CANDLES_5M: 20,
+  MIN_CANDLES_15M: 15,
+  MIN_CANDLES_1H: 15,
+  MIN_CANDLES_4H: 60,
+  
+  // Early Wave
+  EW_MIN_RVOL: 1.5,
+  EW_MIN_TAKER: 0.55,
+  EW_MIN_SPREAD: 0.20
+};
+
+/* ==================================================================
+   🌐 State
+   ================================================================== */
+let workingEndpoint = null;
+const API_ENDPOINTS = CFG.API_ENDPOINTS;
+
+// Data caches
+let availableSymbols = new Set();
+let availableSymbolsLoaded = false;
+const livePrices = {};      // symbol → { price, change, quoteVolume, high, low, volume, ts }
+let lastPriceUpdate = 0;
+let cryptoData = [];
+const analysisCache = {};   // symbol → result (Unified)
+const signalHistory = [];
+const klineCache = {};      // key → { data, ts }
+const depthCache = {};      // symbol → { data, ts }
+let latestTopGainers = [];
+let lastRegime = 'UNKNOWN';
+let currentTab = 'signals';
+let audioEnabled = true;
+let refreshInFlight = false;
+let lastRefresh = 0;
+let refreshTimer = null;
+let liveUpdateTimer = null;
+let priceAgeTimer = null;
+let customWatchlist = [];
+let tradeTimeframe = '15m';
+let currentCategory = null;
+
+// WebSocket Hub (Unified)
+const HUB = {
+  ws: null,
+  subs: new Set(),
+  id: 1,
+  retry: 0,
+  timer: null,
+  last: 0,
+  open: false,
+  msgs: 0,
+  pump: null,
+  hostIdx: 0
+};
+const BT = {};             // symbol → { b, a, t }  (bookTicker)
+const TR = {};             // symbol → { buf: [], last }  (aggTrade)
+const KS = { '1m': {}, '5m': {}, '15m': {}, '1h': {}, '4h': {} };   // kline streams
+const OWN = {};            // owner → Set<stream>
+
+// Price cells Map
+const priceCells = new Map();
+let priceCellsTimer = null;
+
+// Sparkline cache
+const sparklineCache = new Map();
+
+// Semaphore
+class Semaphore {
+  constructor(max){ this.max = max; this.current = 0; this.queue = []; }
+  async acquire(){
+    if (this.current < this.max){ this.current++; return; }
+    await new Promise(res => this.queue.push(res));
+    this.current++;
+  }
+  release(){
+    this.current--;
+    const next = this.queue.shift();
+    if (next) next();
+  }
+}
+const apiSem = new Semaphore(CFG.MAX_CONCURRENT_API);
+
+// Weights
+const DEFAULT_WEIGHTS = {
+  sweep: 20, bos: 18, ofi: 15, deltaDiv: 15, rvol: 12, taker: 12,
+  cvd: 10, adx: 10, squeeze: 10, rsi: 9, mfi: 9, vwap: 9,
+  hl: 8, hh: 7, pushCandle: 5
+};
+const MAX_WEIGHT_SUM = Object.values(DEFAULT_WEIGHTS).reduce((a,b) => a+b, 0);
+
+// Sectors
+const SECTORS = {
+  'Layer1':    { coins: ['BTCUSDT','ETHUSDT','SOLUSDT','AVAXUSDT','DOTUSDT','ATOMUSDT','NEARUSDT','APTUSDT','SUIUSDT','ADAUSDT','TONUSDT','BNBUSDT'], icon: '⛓️', color: '#58a6ff' },
+  'Layer2':    { coins: ['MATICUSDT','ARBUSDT','OPUSDT','STRKUSDT','MANTAUSDT','IMXUSDT','METISUSDT'], icon: '⚡', color: '#a855f7' },
+  'DeFi':      { coins: ['UNIUSDT','AAVEUSDT','MKRUSDT','CRVUSDT','LDOUSDT','COMPUSDT','SNXUSDT','SUSHIUSDT','1INCHUSDT','CAKEUSDT'], icon: '🏦', color: '#10b981' },
+  'AI':        { coins: ['FETUSDT','AGIXUSDT','RNDRUSDT','OCEANUSDT','TAOUSDT','WLDUSDT','GRTUSDT','ARKMUSDT'], icon: '🤖', color: '#fbbf24' },
+  'Gaming':    { coins: ['AXSUSDT','SANDUSDT','MANAUSDT','GALAUSDT','ENJUSDT','MAGICUSDT','GMTUSDT','SLPUSDT'], icon: '🎮', color: '#f472b6' },
+  'Meme':      { coins: ['DOGEUSDT','SHIBUSDT','PEPEUSDT','FLOKIUSDT','BONKUSDT','WIFUSDT','MEMEUSDT','BOMEUSDT'], icon: '🐕', color: '#fb923c' },
+  'Oracles':   { coins: ['LINKUSDT','BANDUSDT','API3USDT','TRBUSDT','PYTHUSDT'], icon: '📡', color: '#22d3ee' },
+  'Storage':   { coins: ['FILUSDT','ARUSDT','STORJUSDT','SCUSDT'], icon: '💾', color: '#94a3b8' },
+  'Privacy':   { coins: ['XMRUSDT','ZECUSDT','DASHUSDT','ROSEUSDT'], icon: '🔒', color: '#cbd5e1' },
+  'RWA':       { coins: ['ONDOUSDT','POLYXUSDT','PENDLEUSDT','CFGUSDT'], icon: '🏛️', color: '#facc15' },
+  'LSD':       { coins: ['LDOUSDT','RPLUSDT','SWISEUSDT','ANKRUSDT'], icon: '💧', color: '#38bdf8' },
+  'Exchange':  { coins: ['BNBUSDT','OKBUSDT','HTUSDT','KCSUSDT'], icon: '🏢', color: '#10b981' }
+};
+
+/* ==================================================================
+   🛠️ Utilities
+   ================================================================== */
+const $ = id => document.getElementById(id);
+window.$ = $;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+const fmtPrice = p => {
+  if (!Number.isFinite(p)) return '—';
+  const a = Math.abs(p);
+  if (a >= 1000) return p.toLocaleString('en-US',{maximumFractionDigits:2});
+  if (a >= 100) return p.toFixed(3);
+  if (a >= 1) return p.toFixed(4);
+  if (a >= .01) return p.toFixed(5);
+  if (a >= .0001) return p.toFixed(6);
+  return p.toExponential(4);
+};
+
+const fmtVol = n => {
+  if (!Number.isFinite(n)) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+  if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(2)+'K';
+  return n.toFixed(0);
+};
+
+const fmtPct = n => {
+  if (!Number.isFinite(n)) return '—';
+  return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+};
+
+const safeGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const safeSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
+const safeDel = k => { try { localStorage.removeItem(k); } catch(e){} };
+
+function parseKline(x){
+  return {
+    t: +x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4],
+    v: +x[5], closeTime: +x[6], q: +x[7],
+    trades: +x[8], tb: +x[9], tbq: +x[10],
+    x: +x[6] < Date.now()
+  };
+}
+
+// Aliases for compatibility with both naming conventions
+const bvol = v => v.v != null && v.v > 0 ? v.v : (v.q / v.c || 0);
+const qvol = v => v.q != null && v.q > 0 ? v.q : (v.v * v.c || 0);
+
+/* ==================================================================
+   🌐 API Client
+   ================================================================== */
+async function detectWorkingEndpoint(){
+  if (workingEndpoint) return workingEndpoint;
+  for (const base of CFG.API_ENDPOINTS){
+    try {
+      const c = new AbortController();
+      const t = setTimeout(() => c.abort(), 5000);
+      const r = await fetch(`${base}/api/v3/ping`, {signal: c.signal, cache: 'no-store'});
+      clearTimeout(t);
+      if (r.ok){ workingEndpoint = base; return base; }
+    } catch(e){}
+  }
+  return null;
+}
+
+async function fetchJSON(url, timeout=10000){
+  if (!workingEndpoint){
+    const base = await detectWorkingEndpoint();
+    if (base){ url = url.replace('https://api.binance.com', base); }
+  } else {
+    url = url.replace('https://api.binance.com', workingEndpoint);
+  }
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), timeout);
+  try{
+    const r = await fetch(url, {signal: c.signal, cache: 'no-store'});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+async function fetchJSONLimited(url, timeout=10000){
+  await apiSem.acquire();
+  try {
+    return await fetchJSON(url, timeout);
+  } finally {
+    apiSem.release();
+  }
+}
+
+async function loadAvailableSymbols(){
+  if (availableSymbolsLoaded) return;
+  try {
+    const info = await fetchJSON(`${CFG.API}/api/v3/exchangeInfo`, 15000);
+    for (const s of info.symbols){
+      if (s.status === 'TRADING' && s.quoteAsset === 'USDT' && s.isSpotTradingAllowed !== false){
+        availableSymbols.add(s.symbol);
+      }
+    }
+    availableSymbolsLoaded = true;
+  } catch(e){}
+}
+
+/* ==================================================================
+   📊 Kline & Depth Cache
+   ================================================================== */
+function loadKlineCache(){
+  try {
+    const raw = safeGet('unified_kline_cache_v1');
+    if (!raw){ return; }
+    const parsed = JSON.parse(raw);
+    const now = Date.now();
+    for (const [key, value] of Object.entries(parsed)){
+      if (!value?.data || !Array.isArray(value.data)) continue;
+      if (now - value.ts > CFG.KLINE_CACHE_TTL * 2) continue;
+      // Dedup
+      const dedup = new Map();
+      for (const c of value.data) dedup.set(c.t, c);
+      klineCache[key] = { data: [...dedup.values()].sort((a,b) => a.t - b.t), ts: value.ts };
+    }
+  } catch(e){ safeDel('unified_kline_cache_v1'); }
+}
+
+function saveKlineCache(){
+  try {
+    const now = Date.now();
+    const trimmed = {};
+    const keys = Object.keys(klineCache).slice(-200);
+    for (const k of keys){
+      const entry = klineCache[k];
+      if (!entry?.data || entry.data.length < 15) continue;
+      if (now - entry.ts > CFG.KLINE_CACHE_TTL * 2) continue;
+      trimmed[k] = entry;
+    }
+    safeSet('unified_kline_cache_v1', JSON.stringify(trimmed));
+  } catch(e){}
+}
+
+async function ensureK(tf, sym, limit=CFG.KLINE_LIMIT){
+  const key = `${tf}_${sym}`;
+  const cached = klineCache[key];
+  const now = Date.now();
+  if (cached && cached.data.length >= 15 && (now - cached.ts) < CFG.KLINE_CACHE_TTL){
+    // Tail refresh
+    try {
+      const tail = await fetchJSONLimited(`${CFG.API}/api/v3/klines?symbol=${sym}&interval=${tf}&limit=10`, 8000);
+      const parsed = tail.map(parseKline).filter(c => c.c > 0);
+      const dedup = new Map();
+      for (const c of cached.data) dedup.set(c.t, c);
+      for (const c of parsed) dedup.set(c.t, c);
+      const merged = [...dedup.values()].sort((a,b) => a.t - b.t);
+      klineCache[key] = { data: merged, ts: now };
+      return merged.slice(-limit);
+    } catch(e){}
+  }
+  
+  const raw = await fetchJSONLimited(`${CFG.API}/api/v3/klines?symbol=${sym}&interval=${tf}&limit=${limit}`, 12000);
+  if (!raw || !Array.isArray(raw)) throw new Error('Invalid klines');
+  const parsed = raw.map(parseKline).filter(c => c.c > 0);
+  const dedup = new Map();
+  for (const c of parsed) dedup.set(c.t, c);
+  const finalParsed = [...dedup.values()].sort((a,b) => a.t - b.t);
+  if (finalParsed.length < 15) throw new Error(`Only ${finalParsed.length} candles`);
+  klineCache[key] = { data: finalParsed, ts: now };
+  return finalParsed;
+}
+
+async function ensureDepth(sym){
+  const now = Date.now();
+  const cached = depthCache[sym];
+  if (cached && (now - cached.ts) < CFG.DEPTH_CACHE_MS) return cached.data;
+  try {
+    const data = await fetchJSONLimited(`${CFG.API}/api/v3/depth?symbol=${sym}&limit=${CFG.DEPTH_LIMIT}`, 8000);
+    depthCache[sym] = { data, ts: now };
+    return data;
+  } catch(e){
+    return cached?.data || null;
+  }
+}
+
+async function fetchTicker24h(){
+  const data = await fetchJSONLimited(`${CFG.API}/api/v3/ticker/24hr`, 12000);
+  return data.filter(x => x.symbol.endsWith('USDT')).map(x => ({
+    symbol: x.symbol, baseAsset: x.symbol.replace('USDT',''), price: +x.lastPrice,
+    change: +x.priceChangePercent, quoteVolume: +x.quoteVolume,
+    high: +x.highPrice, low: +x.lowPrice, volume: +x.volume
+  }));
+}
+
+/* ==================================================================
+   🔌 WebSocket Hub (Unified)
+   ================================================================== */
+function hubStatus(){
+  const el = $('ws-status');
+  if (!el) return;
+  if (HUB.open){
+    el.className = 'px-3 py-1 text-[10px] font-semibold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5 font-mono';
+    el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>WS: ${HUB.subs.size}`;
+  } else {
+    el.className = 'px-3 py-1 text-[10px] font-semibold rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 font-mono';
+    el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>WS: Offline`;
+  }
+}
+
+function hubSend(method, params){
+  if (!params.length) return;
+  for (let i = 0; i < params.length; i += 100){
+    wsq.push({ method, params: params.slice(i, i + 100) });
+  }
+  hubPump();
+}
+
+let wsq = [];
+function hubPump(){
+  if (HUB.pump) return;
+  HUB.pump = setInterval(() => {
+    if (!wsq.length){ clearInterval(HUB.pump); HUB.pump = null; return; }
+    const w = HUB.ws;
+    if (w && w.readyState === 1) w.send(JSON.stringify({ ...wsq.shift(), id: HUB.id++ }));
+  }, 250);
+}
+
+function hubConnect(){
+  const w0 = HUB.ws;
+  if (w0 && (w0.readyState === 0 || w0.readyState === 1)) return;
+  const host = CFG.WS_HOSTS[HUB.hostIdx % 2];
+  const w = new WebSocket(host + '/stream?streams=!miniTicker@arr');
+  HUB.ws = w;
+  w.onopen = () => {
+    HUB.open = true;
+    HUB.retry = 0;
+    HUB.last = Date.now();
+    wsq = [];
+    hubSend('SUBSCRIBE', [...HUB.subs]);
+    hubStatus();
+  };
+  w.onmessage = ev => {
+    HUB.last = Date.now();
+    HUB.msgs++;
+    let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+    if (m && m.stream) hubRoute(m.stream, m.data);
+  };
+  w.onclose = () => {
+    HUB.open = false;
+    HUB.hostIdx++;
+    hubStatus();
+    clearTimeout(HUB.timer);
+    HUB.timer = setTimeout(hubConnect, Math.min(30000, 1000 * 2 ** Math.min(HUB.retry++, 5)));
+  };
+  w.onerror = () => { try { w.close(); } catch(e){} };
+}
+
+// Silence detector
+setInterval(() => {
+  if (HUB.open && Date.now() - HUB.last > 45000){
+    try { HUB.ws.close(); } catch(e){}
+  }
+}, 15000);
+
+function hubSub(list){
+  const n = list.filter(x => !HUB.subs.has(x));
+  n.forEach(x => HUB.subs.add(x));
+  if (n.length && HUB.open) hubSend('SUBSCRIBE', n);
+  hubConnect();
+}
+
+function hubUnsub(list){
+  const n = list.filter(x => HUB.subs.has(x));
+  n.forEach(x => HUB.subs.delete(x));
+  if (n.length && HUB.open) hubSend('UNSUBSCRIBE', n);
+}
+
+function own(name, list){
+  OWN[name] = new Set(list);
+  const all = new Set(['!miniTicker@arr']);
+  Object.values(OWN).forEach(st => st.forEach(x => all.add(x)));
+  hubUnsub([...HUB.subs].filter(x => !all.has(x)));
+  hubSub([...all].filter(x => !HUB.subs.has(x)));
+}
+
+function hubRoute(st, d){
+  if (st === '!miniTicker@arr'){ onMini(d); return; }
+  const ty = st.slice(st.indexOf('@') + 1);
+  if (ty.startsWith('kline_')) onKline(ty.slice(6), d.k);
+  else if (ty === 'aggTrade') onTrade(d);
+  else if (ty === 'bookTicker') BT[d.s] = { b: +d.b, a: +d.a, t: Date.now() };
+}
+
+function onMini(arr){
+  const now = Date.now();
+  for (const x of arr){
+    const o = +x.o, c = +x.c;
+    livePrices[x.s] = { ...(livePrices[x.s] || {}), price: c, o, h: +x.h, l: +x.l, v: +x.v, q: +x.q,
+      change: o ? (c / o - 1) * 100 : 0, ts: now };
+  }
+  lastPriceUpdate = now;
+}
+
+function onKline(tf, k){
+  const rec = KS[tf] && KS[tf][k.s];
+  if (!rec) return;
+  const c = { t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c, v: +k.v, q: +k.q, tb: +k.Q, x: !!k.x };
+  const a = rec.k, L = a.length;
+  if (L && a[L-1].t === c.t) a[L-1] = c;
+  else if (!L || c.t > a[L-1].t){ a.push(c); if (a.length > 1100) a.shift(); }
+}
+
+function onTrade(d){
+  const s = d.s;
+  const r = TR[s] || (TR[s] = { buf: [] });
+  const p = +d.p, q = p * +d.q;
+  r.buf.push([d.T, q, d.m ? 0 : 1, p]);
+  r.last = p;
+  const cut = Date.now() - 3e5;
+  while (r.buf.length && r.buf[0][0] < cut) r.buf.shift();
+}
+
+/* ==================================================================
+   💹 Live Prices & Cells
+   ================================================================== */
+function getLiveTicker(symbol){ return livePrices[symbol] || null; }
+
+function registerPriceCells(){
+  priceCells.clear();
+  document.querySelectorAll('[data-live-symbol]').forEach(el => {
+    const sym = el.dataset.liveSymbol;
+    if (!sym) return;
+    if (!priceCells.has(sym)) priceCells.set(sym, new Set());
+    priceCells.get(sym).add(el);
+  });
+}
+
+function scheduleRegisterPriceCells(){
+  if (priceCellsTimer) return;
+  priceCellsTimer = setTimeout(() => {
+    priceCellsTimer = null;
+    registerPriceCells();
+  }, 150);
+}
+
+function updateLivePriceCells(symbol, newPrice, oldPrice){
+  const cells = priceCells.get(symbol);
+  if (!cells || cells.size === 0){
+    if (priceCells.size === 0) scheduleRegisterPriceCells();
+    return;
+  }
+  const newText = fmtPrice(newPrice);
+  cells.forEach(cell => {
+    if (!cell.isConnected) return;
+    if (cell.textContent === newText) return;
+    cell.textContent = newText;
+    if (oldPrice !== undefined && newPrice > oldPrice){
+      cell.classList.add('price-flash-up');
+      setTimeout(() => cell.classList.remove('price-flash-up'), 500);
+    } else if (oldPrice !== undefined && newPrice < oldPrice){
+      cell.classList.add('price-flash-down');
+      setTimeout(() => cell.classList.remove('price-flash-down'), 500);
+    }
+  });
+}
+
+async function refreshAllLivePrices(){
+  try {
+    const data = await fetchJSONLimited(`${CFG.API}/api/v3/ticker/24hr`, 12000);
+    const now = Date.now();
+    for (const x of data){
+      if (!x.symbol.endsWith('USDT')) continue;
+      livePrices[x.symbol] = {
+        price: +x.lastPrice, change: +x.priceChangePercent, quoteVolume: +x.quoteVolume,
+        high: +x.highPrice, low: +x.lowPrice, volume: +x.volume, ts: now
+      };
+    }
+    lastPriceUpdate = now;
+    updatePriceAge();
+    return true;
+  } catch(e) { return false; }
+}
+
+async function updateLivePricesQuick(){
+  const tracked = getTrackedSymbols();
+  if (!tracked.length) return;
+  const wsAlive = HUB.open && HUB.subs.size > 0;
+  const now = Date.now();
+  const lastFull = updateLivePricesQuick._lastFull || 0;
+  const shouldFetchFull = now - lastFull > 60000;
+  try {
+    let changed = false;
+    const trackedSet = new Set(tracked);
+    if (!wsAlive){
+      const data = await fetchJSON(`${CFG.API}/api/v3/ticker/price`, 10000);
+      for (const p of data){
+        if (!trackedSet.has(p.symbol)) continue;
+        const np = +p.price;
+        const old = livePrices[p.symbol];
+        if (!old || old.price !== np){
+          livePrices[p.symbol] = { ...(old||{}), price: np, ts: now };
+          changed = true;
+          updateLivePriceCells(p.symbol, np, old?.price);
+        }
+      }
+    }
+    if (shouldFetchFull){
+      const full = await fetchJSON(`${CFG.API}/api/v3/ticker/24hr`, 15000);
+      for (const x of full){
+        if (!trackedSet.has(x.symbol)) continue;
+        if (!livePrices[x.symbol]) livePrices[x.symbol] = {};
+        Object.assign(livePrices[x.symbol], {
+          change: +x.priceChangePercent, quoteVolume: +x.quoteVolume,
+          high: +x.highPrice, low: +x.lowPrice, volume: +x.volume
+        });
+      }
+      updateLivePricesQuick._lastFull = now;
+      changed = true;
+    }
+    if (changed){
+      lastPriceUpdate = now;
+      updatePriceAge();
+      updateActiveSignals();
+      rerenderCurrentTab();
+      updateStats();
+    }
+  } catch(e){}
+}
+
+function getTrackedSymbols(){
+  const set = new Set();
+  Object.keys(analysisCache).slice(0, 150).forEach(s => set.add(s));
+  customWatchlist.forEach(s => set.add(s));
+  signalHistory.filter(s => s.status === 'ACTIVE').forEach(s => set.add(s.symbol));
+  return [...set];
+}
+
+function updatePriceAge(){
+  const el = $('price-age-text');
+  if (!el || !lastPriceUpdate) return;
+  const age = Math.floor((Date.now() - lastPriceUpdate) / 1000);
+  el.textContent = `${age}ث`;
+  const badge = $('price-age');
+  if (badge){
+    if (age < 15) badge.className = 'px-3 py-1 text-[10px] font-semibold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono';
+    else if (age < 60) badge.className = 'px-3 py-1 text-[10px] font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 font-mono';
+    else badge.className = 'px-3 py-1 text-[10px] font-semibold rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/30 font-mono';
+  }
+}
+
+function rerenderCurrentTab(){
+  const results = Object.values(analysisCache);
+  if (currentTab === 'signals') renderSignals(results);
+  if (currentTab === 'confirmed') renderConfirmed(results);
+  if (currentTab === 'earlywave') renderEarlyWave(results);
+  if (currentTab === 'early') renderEarlySignals(results);
+  if (currentTab === 'emerging') renderEmerging(results);
+  if (currentTab === 'growing') renderGrowing(results);
+  if (currentTab === 'peaks') renderPeaks(results);
+  if (currentTab === 'gainers') renderGainers();
+  if (currentTab === 'all') renderAllCoins();
+  if (currentTab === 'watchlist') renderWatchlistPanel();
+  if (currentTab === 'history') renderHistory();
+  if (currentTab === 'sectors') renderSectors();
+  if (currentCategory && $('categoryModal').classList.contains('on')) renderCategoryList();
+}
+
+/* ==================================================================
+   ⏳ Placeholder functions (سيتم ملؤها في المراحل القادمة)
+   ================================================================== */
+// في المرحلة 2 سنضيف: كل المؤشرات (RSI Live, RVOL مزدوج, MFI, ADX, ...)
+// في المرحلة 3 سنضيف: WebSocket Hub الكامل
+// في المرحلة 4 سنضيف: Unified Score Engine
+// في المرحلة 5 سنضيف: كل الـ Render functions
+
+function boot(){
+  console.log('🚀 Unified Trader v1.0 — Boot');
+  console.log('📋 المرحلة 1 مكتملة: الهيكل الأساسي');
+  console.log('⏳ المرحلة 2-5 قيد البناء');
+}
+window.onload = boot;
+</script>
+
+</body>
+</html>
+/* ---------- Accumulation Detection ---------- */
+function accum(k){
+  const L = k.length, w = 30;
+  if (L < 2 * w) return { sc: 0, t: [], cmf: 0, adx: null };
+  const ad = adlS(k), ob = obvS(k);
+  const adxArr = adxS(k);
+  const adx = adxArr[L - 1];
+  const cm = cmf(k);
+  const dP = k[L - 1].c - k[L - 1 - w].c;
+  const c = [
+    [adx != null && adx < 25, 'ADX ' + (adx == null ? '–' : adx.toFixed(0)) + ' < 25'],
+    [cm > .05, 'CMF(20) = ' + cm.toFixed(2) + ' > 0.05'],
+    [ad[L - 1] > ad[L - 1 - w] && dP < atr(k), 'A/D صاعد والسعر لم ينطلق'],
+    [ob[L - 1] > ob[L - 1 - w], 'OBV يصعد']
+  ];
+  return { sc: c.filter(x => x[0]).length * 25, t: c.filter(x => x[0]).map(x => x[1]), cmf: cm, adx };
+}
+
+/* ---------- Advanced Indicators Aggregator ---------- */
+function adv(k){
+  const c = k.map(v => v.c);
+  const mc = macdS(c);
+  const n = c.length;
+  const h = mc.h;
+  const r = rsiS(c);
+  const tol = .25 * atr(k);
+  const dr = divs(k, r, tol);
+  const dm = divs(k, mc.m, tol);
+  const rec = a => { const q = a.filter(d => n - 1 - d.i2 <= 25).pop(); return q ? q.dir : null; };
+  const cross = h.slice(-4).some(v => v == null) ? null
+    : h[n - 1] > 0 && h.slice(-4, -1).some(v => v <= 0) ? 'bull'
+    : h[n - 1] < 0 && h.slice(-4, -1).some(v => v >= 0) ? 'bear'
+    : null;
+  return {
+    n,
+    macd: { cross, above0: mc.m[n - 1] > 0, dv: rec(dm) },
+    rsiDv: rec(dr),
+    dvs: dr,
+    rsi: r[n - 1],
+    bb: sqzInfo(k),
+    vp: vp(k),
+    acc: accum(k),
+    sw: sweepFvg(k)
+  };
+}
+Unified Score = 
+  score(72) × 0.4         = 28.8
++ earlyScore(68) × 0.3    = 20.4
++ EW(9.0/10 × 100) × 0.2  = 18.0
++ bonuses
+  ├─ confluence 3/3       = +3
+  ├─ R:R 3.2              = +2
+  ├─ CONFIRMED (strong)   = +5
+  └─ phase=GROWING        = +1
+─────────────────────────
+Unified = 78.2/100 → 🔒 مؤكدة بقوة
+/* ==================================================================
+   🔍 Scan Markets — المسح الشامل
+   ================================================================== */
+
+async function scanMarkets(){
+  if (refreshInFlight) return;
+  refreshInFlight = true;
+  setApiStatus('جاري المسح...', true);
+  updateProgress(0, 'بدء المسح...');
+
+  try {
+    // تنظيف الـ caches القديمة
+    const now = Date.now();
+    for (const key of Object.keys(klineCache)){
+      const entry = klineCache[key];
+      if (!entry?.data || entry.data.length < 15 || (now - entry.ts) > CFG.KLINE_CACHE_TTL * 2){
+        delete klineCache[key];
+      }
+    }
+    for (const key of Object.keys(depthCache)){
+      if (now - depthCache[key].ts > 300000) delete depthCache[key];
+    }
+
+    setApiStatus('تحديث الأسعار...', true);
+    updateProgress(5, 'جلب الأسعار...');
+    await refreshAllLivePrices();
+
+    // جلب كل الأزواج
+    let tickers = await fetchTicker24h();
+    if (availableSymbolsLoaded) tickers = tickers.filter(t => availableSymbols.has(t.symbol));
+
+    const STABLES = ['USDC', 'FDUSD', 'TUSD', 'BUSD', 'DAI', 'USDP', 'USDD', 'EUR', 'TRY', 'BRL', 'USDE', 'PYUSD', 'USDS'];
+    const filtered = tickers
+      .filter(x => x.quoteVolume >= CFG.MIN_QUOTE_VOL && x.price > 0)
+      .filter(x => !STABLES.some(s => x.baseAsset === s))
+      .filter(x => !/(UP|DOWN|BULL|BEAR|3L|3S|5L|5S|2L|2S|4L|4S)$/.test(x.baseAsset));
+
+    // ترتيب بـ explosionScore (scanner5 logic)
+    const scored = filtered.map(x => {
+      const absChange = Math.abs(x.change);
+      let explosionScore = 0;
+      if (absChange >= 3 && absChange <= 25) explosionScore += 40;
+      else if (absChange > 25 && absChange <= 50) explosionScore += 20;
+      else if (absChange > 50) explosionScore += 5;
+      const vol = x.quoteVolume;
+      if (vol >= 1e7 && vol <= 2e8) explosionScore += 30;
+      else if (vol >= 2e8 && vol <= 1e9) explosionScore += 20;
+      else if (vol >= 5e6 && vol < 1e7) explosionScore += 15;
+      else if (vol >= 1e9) explosionScore += 5;
+      if (x.high > 0 && x.high > x.low){
+        const rangePos = (x.price - x.low) / (x.high - x.low);
+        if (rangePos >= 0.85) explosionScore += 20;
+        else if (rangePos >= 0.7) explosionScore += 10;
+      }
+      if (x.change > 0) explosionScore += 10;
+      return { ...x, explosionScore };
+    });
+
+    const ranked = scored.sort((a, b) => b.explosionScore - a.explosionScore);
+    cryptoData = ranked;
+    if ($('stat-scanned')) $('stat-scanned').textContent = filtered.length;
+
+    // Top Gainers
+    latestTopGainers = [...tickers]
+      .filter(x => x.quoteVolume >= 80000 && x.change > 2)
+      .filter(x => !STABLES.some(s => x.baseAsset === s))
+      .filter(x => !/(UP|DOWN|BULL|BEAR|3L|3S|5L|5S)$/.test(x.baseAsset))
+      .sort((a, b) => b.change - a.change)
+      .slice(0, 50);
+    renderGainers();
+
+    // كشف Market Regime
+    try {
+      const btcCandles = await ensureK('1h', 'BTCUSDT', 100);
+      const regime = detectMarketRegime(btcCandles);
+      lastRegime = regime.regime;
+      updateRegimeBadge(regime);
+    } catch(e){}
+
+    // بناء قائمة التحليل (Watchlist أولاً ثم المرشحون)
+    const analysisSet = new Set();
+    const toAnalyze = [];
+
+    for (const sym of customWatchlist){
+      const t = tickers.find(x => x.symbol === sym);
+      if (t){ toAnalyze.push(t); analysisSet.add(sym); }
+    }
+    for (const t of ranked){
+      if (analysisSet.has(t.symbol)) continue;
+      if (toAnalyze.length >= CFG.WATCHLIST_SIZE) break;
+      toAnalyze.push(t);
+      analysisSet.add(t.symbol);
+    }
+
+    // تفريغ اللوحات
+    ['signals-list', 'confirmed-list', 'earlywave-list', 'emerging-list',
+     'growing-list', 'early-list', 'peaks-list'].forEach(id => {
+      const el = $(id);
+      if (el) el.innerHTML = '';
+    });
+    if ($('all-body')){
+      $('all-body').innerHTML = '<tr><td colspan="14" class="text-center py-8 text-cyan-400"><i class="fa-solid fa-spinner spinner mr-2"></i>جاري المسح...</td></tr>';
+    }
+
+    // ============ الحلقة الرئيسية ============
+    const results = [];
+    let successCount = 0, failCount = 0;
+    const total = toAnalyze.length;
+    const startTime = Date.now();
+
+    // تحديد من يحتاج Early Wave (Watchlist + Top 30 في الترتيب)
+    const ewSet = new Set([...customWatchlist, ...ranked.slice(0, 30).map(x => x.symbol)]);
+
+    updateProgress(10, `فحص ${total} عملة...`);
+
+    for (let i = 0; i < toAnalyze.length; i++){
+      const ticker = toAnalyze[i];
+
+      // تحديث الأسعار كل 20 عملة
+      if (i > 0 && i % CFG.PRICE_REFRESH_BATCH === 0){
+        await refreshAllLivePrices();
+      }
+
+      try {
+        const needEW = ewSet.has(ticker.symbol);
+        const result = await analyzeSymbolFull(ticker.symbol, ticker, { needEW });
+
+        if (result){
+          analysisCache[ticker.symbol] = result;
+          results.push(result);
+          successCount++;
+
+          // حفظ في السجل
+          if (result.signalType !== 'NONE') addSignalToHistory(result);
+
+          // إعادة الرسم كل 5 عملات أو عند إشارة مهمة
+          if (i % 5 === 0 || result.signalType !== 'NONE'){
+            rerenderPartial(results);
+          }
+        } else {
+          failCount++;
+        }
+      } catch(e){
+        failCount++;
+      }
+
+      const pct = 10 + Math.round(((i + 1) / total) * 85);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      updateProgress(pct, `فحص ${i+1}/${total} — ✅ ${successCount} | ⏱ ${elapsed}ث`);
+      setApiStatus(`مسح ${i+1}/${total}...`, true);
+
+      await sleep(CFG.REQUEST_GAP_MS);
+      if ((i + 1) % 25 === 0 && i < toAnalyze.length - 1) await sleep(1200);
+    }
+
+    // ============ الرسم النهائي ============
+    updateActiveSignals();
+    rerenderAll(results);
+
+    // WebSocket subscribe
+    own('main', getTrackedSymbols().map(s => s.toLowerCase() + '@bookTicker'));
+    own('trades', getTrackedSymbols().slice(0, 12).map(s => s.toLowerCase() + '@aggTrade'));
+
+    lastRefresh = Date.now();
+    updateProgress(100, `✅ اكتمل — ${successCount} عملة`);
+    setApiStatus(`✅ ${successCount} عملة`, true);
+    saveKlineCache();
+    showToast(`✅ تم مسح ${successCount} عملة`);
+
+    setTimeout(() => {
+      const pc = $('progressContainer');
+      if (pc) pc.classList.remove('active');
+    }, 3000);
+
+  } catch(e){
+    console.error('Scan error:', e);
+    setApiStatus('فشل الاتصال', false);
+    updateProgress(0, `❌ فشل: ${e.message}`);
+  } finally {
+    refreshInFlight = false;
+  }
+}
+
+/* إعادة رسم جزئي (أثناء الفحص) */
+function rerenderPartial(results){
+  renderSignals(results);
+  renderConfirmed(results);
+  renderEarlyWave(results);
+  renderEmerging(results);
+  renderGrowing(results);
+  renderPeaks(results);
+  updateStats();
+  if (currentCategory && $('categoryModal').classList.contains('on')){
+    renderCategoryList();
+  }
+}
+
+/* إعادة رسم كامل */
+function rerenderAll(results){
+  rerenderPartial(results);
+  renderEarlySignals(results);
+  renderSectors();
+  renderAllCoins();
+  renderHistory();
+  updateHotSector();
+  if (currentTab === 'watchlist') renderWatchlistPanel();
+}
+
+/* ==================================================================
+   🔎 analyzeSingleSymbol — تحليل عملة واحدة (للمفضلة)
+   ================================================================== */
+
+async function analyzeSingleSymbol(symbol, forceEW = true){
+  try {
+    const allTickers = await fetchTicker24h();
+    const tickerData = allTickers.find(x => x.symbol === symbol);
+    if (!tickerData) return null;
+
+    const result = await analyzeSymbolFull(symbol, tickerData, { needEW: forceEW });
+    if (result){
+      analysisCache[symbol] = result;
+      if (result.signalType !== 'NONE') addSignalToHistory(result);
+    }
+    return result;
+  } catch(e){
+    return null;
+  }
+}
+/* ==================================================================
+   ⭐ Watchlist Management
+   ================================================================== */
+
+function loadCustomWatchlist(){
+  try {
+    const raw = safeGet('unified_watchlist_v1');
+    if (raw) customWatchlist = JSON.parse(raw) || [];
+  } catch(e){
+    customWatchlist = [];
+  }
+}
+
+function saveCustomWatchlist(){
+  safeSet('unified_watchlist_v1', JSON.stringify(customWatchlist));
+}
+
+function updateWatchlistBadge(){
+  const badge = $('watchlist-count-badge');
+  if (badge) badge.textContent = customWatchlist.length;
+}
+
+async function findAvailableSymbol(symbol){
+  symbol = symbol.toUpperCase();
+  if (!symbol.endsWith('USDT')) symbol += 'USDT';
+  if (!availableSymbolsLoaded) await loadAvailableSymbols();
+  return availableSymbols.has(symbol) ? symbol : null;
+}
+
+async function quickAddPair(){
+  const input = $('quick-add-input');
+  if (!input) return;
+  let sym = input.value.trim().toUpperCase();
+  if (!sym) return;
+  if (!sym.endsWith('USDT')) sym += 'USDT';
+
+  const available = await findAvailableSymbol(sym);
+  if (!available){ showToast('❌ الزوج غير متوفر'); return; }
+  if (customWatchlist.includes(sym)){ showToast('موجودة بالفعل'); return; }
+
+  customWatchlist.push(sym);
+  saveCustomWatchlist();
+  updateWatchlistBadge();
+  input.value = '';
+  showToast(`✅ أضيفت ${sym.replace('USDT', '')}`);
+
+  // تحليل فوري
+  await analyzeSingleSymbol(sym, true);
+  renderWatchlistPanel();
+
+  // إعادة الاشتراك WebSocket
+  own('main', getTrackedSymbols().map(s => s.toLowerCase() + '@bookTicker'));
+  own('trades', getTrackedSymbols().slice(0, 12).map(s => s.toLowerCase() + '@aggTrade'));
+}
+
+function removeCustomPair(sym){
+  customWatchlist = customWatchlist.filter(s => s !== sym);
+  saveCustomWatchlist();
+  updateWatchlistBadge();
+  // إلغاء الاشتراك
+  own('main', getTrackedSymbols().map(s => s.toLowerCase() + '@bookTicker'));
+  own('trades', getTrackedSymbols().slice(0, 12).map(s => s.toLowerCase() + '@aggTrade'));
+}
+
+function addToWatchlist(symbol){
+  if (customWatchlist.includes(symbol)){ showToast('⭐ موجودة بالفعل'); return; }
+  customWatchlist.push(symbol);
+  saveCustomWatchlist();
+  updateWatchlistBadge();
+  showToast(`✅ أضيفت ${symbol.replace('USDT', '')}`);
+  if (currentCategory) renderCategoryList();
+}
+/* ==================================================================
+   📜 Signal History — تخزين + Attribution
+   ================================================================== */
+
+function loadSignalHistory(){
+  try {
+    const raw = safeGet('unified_signal_history_v1');
+    if (raw) signalHistory = JSON.parse(raw) || [];
+  } catch(e){
+    signalHistory = [];
+  }
+}
+
+function saveSignalHistory(){
+  try {
+    if (signalHistory.length > CFG.MAX_SIGNAL_HISTORY){
+      signalHistory = signalHistory.slice(0, CFG.MAX_SIGNAL_HISTORY);
+    }
+    safeSet('unified_signal_history_v1', JSON.stringify(signalHistory));
+  } catch(e){}
+}
+
+function addSignalToHistory(result){
+  // Cooldown: نفس الرمز + نفس النوع خلال 1 ساعة → تجاهل
+  const existing = signalHistory.find(s =>
+    s.symbol === result.symbol &&
+    s.signalType === result.signalType &&
+    (Date.now() - s.timestamp) < CFG.SIGNAL_COOLDOWN_MS
+  );
+  if (existing) return null;
+
+  // تحديد المصدر (Attribution)
+  const scannerSource = result.signalType;   // GOLD/BUY/EARLY
+  const dashboardSource = result.earlyWave?.state || 'NONE';   // ENTRY/READY/ACCUMULATION/WATCH
+  let source = 'scanner';
+  if (scannerSource !== 'NONE' && dashboardSource !== 'NONE' && dashboardSource !== 'WATCH'){
+    source = 'both';
+  } else if (dashboardSource !== 'NONE' && dashboardSource !== 'WATCH'){
+    source = 'dashboard';
+  }
+
+  const signal = {
+    id: Date.now() + Math.random(),
+    symbol: result.symbol,
+    timestamp: result.timestamp,
+
+    // Scores
+    score: result.score,
+    earlyScore: result.earlyScore,
+    unifiedScore: result.unifiedScore,
+
+    // Classification
+    signalType: result.signalType,
+    signalStrength: result.signalStrength,
+    confluence: result.confluence,
+    phase: result.phase,
+    crossValidation: result.crossValidation,
+
+    // Attribution 🆕
+    source,
+    scannerType: scannerSource,
+    dashboardType: dashboardSource,
+    unifiedLevel: result.crossValidation?.level || 'NONE',
+
+    // Plan
+    entry: result.entry,
+    tp: result.tp,
+    tp2: result.tp2,
+    sl: result.sl,
+    rr: result.rr,
+    atr: result.atr,
+
+    // Context
+    change24h: result.change24h,
+
+    // Status
+    currentPrice: result.close,
+    status: 'ACTIVE',
+    pnlPct: 0,
+
+    // Reasons
+    reasons: (result.reasons || []).slice(0, 5)
+  };
+
+  signalHistory.unshift(signal);
+  saveSignalHistory();
+
+  // تشغيل الصوت حسب الأولوية
+  if (signal.crossValidation?.status === 'CONFIRMED'){
+    playSound('CONFIRMED');
+  } else if (result.signalType === 'GOLD'){
+    playSound('GOLD');
+  } else if (result.signalType === 'EARLY'){
+    playSound('EARLY');
+  }
+
+  return signal;
+}
+
+function updateActiveSignals(){
+  let changed = false;
+  let justWon = [], justLost = [];
+
+  for (const sig of signalHistory){
+    if (sig.status !== 'ACTIVE') continue;
+
+    const lp = livePrices[sig.symbol];
+    if (lp?.price) sig.currentPrice = lp.price;
+    sig.pnlPct = ((sig.currentPrice - sig.entry) / sig.entry) * 100;
+
+    if (sig.currentPrice >= sig.tp){
+      sig.status = 'WON';
+      sig.pnlPct = ((sig.tp - sig.entry) / sig.entry) * 100;
+      justWon.push(sig);
+      changed = true;
+    } else if (sig.currentPrice <= sig.sl){
+      sig.status = 'LOST';
+      sig.pnlPct = ((sig.sl - sig.entry) / sig.entry) * 100;
+      justLost.push(sig);
+      changed = true;
+    } else {
+      const ageHours = (Date.now() - sig.timestamp) / 3600000;
+      if (ageHours > 24){
+        sig.status = 'EXPIRED';
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) saveSignalHistory();
+  if (justWon.length) playSound('WON');
+  if (justLost.length) playSound('LOST');
+}
+/* ==================================================================
+   📊 Attribution Stats — أي مصدر أفضل؟
+   ================================================================== */
+
+function computeAttributionStats(){
+  const stats = {
+    scanner:  { total: 0, won: 0, lost: 0, active: 0, pnlSum: 0 },
+    dashboard:{ total: 0, won: 0, lost: 0, active: 0, pnlSum: 0 },
+    both:     { total: 0, won: 0, lost: 0, active: 0, pnlSum: 0 }
+  };
+
+  signalHistory.forEach(s => {
+    const src = s.source || 'scanner';
+    if (!stats[src]) return;
+    stats[src].total++;
+    if (s.status === 'WON') stats[src].won++;
+    else if (s.status === 'LOST') stats[src].lost++;
+    else if (s.status === 'ACTIVE') stats[src].active++;
+    stats[src].pnlSum += s.pnlPct || 0;
+  });
+
+  const result = {};
+  for (const [src, d] of Object.entries(stats)){
+    const decided = d.won + d.lost;
+    result[src] = {
+      total: d.total,
+      won: d.won,
+      lost: d.lost,
+      active: d.active,
+      winRate: decided > 0 ? (d.won / decided) * 100 : null,
+      avgPnl: d.total > 0 ? d.pnlSum / d.total : 0
+    };
+  }
+  return result;
+}
+/* ==================================================================
+   🧹 أدوات التنظيف
+   ================================================================== */
+
+function clearSignalHistory(){
+  if (!confirm('هل تريد مسح كل السجل؟ لا يمكن التراجع.')) return;
+  signalHistory.length = 0;
+  saveSignalHistory();
+  renderHistory();
+  showToast('✅ تم مسح السجل');
+}
+
+function deleteSignal(id){
+  const idx = signalHistory.findIndex(s => s.id === id);
+  if (idx >= 0){
+    signalHistory.splice(idx, 1);
+    saveSignalHistory();
+    renderHistory();
+    showToast('✅ حُذفت الإشارة');
+  }
+}
+
+function clearKlineCache(){
+  Object.keys(klineCache).forEach(k => delete klineCache[k]);
+  Object.keys(depthCache).forEach(k => delete depthCache[k]);
+  safeDel('unified_kline_cache_v1');
+  showToast('✅ تم مسح الـ cache');
+}
+/* ==================================================================
+   🎨 Render Helpers
+   ================================================================== */
+
+function renderSparkline(closes){
+  if (!closes || closes.length < 2) return '';
+  const hash = closes.length + '|' + closes[0].toFixed(6) + '|' + closes[closes.length-1].toFixed(6);
+  if (sparklineCache.has(hash)) return sparklineCache.get(hash);
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+  const width = 100, height = 30;
+  const points = closes.map((c, i) => {
+    const x = (i / (closes.length - 1)) * width;
+    const y = height - ((c - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+  const isUp = closes[closes.length-1] >= closes[0];
+  const strokeColor = isUp ? '#10b981' : '#f43f5e';
+  const svg = `<svg viewBox="0 0 ${width} ${height}" class="sparkline" preserveAspectRatio="none">
+    <polyline points="${points}" fill="none" stroke="${strokeColor}" stroke-width="2"/>
+  </svg>`;
+  if (sparklineCache.size > 500) sparklineCache.clear();
+  sparklineCache.set(hash, svg);
+  return svg;
+}
+
+function renderPriceAgeBadge(priceTs){
+  if (!priceTs) return '';
+  const ageSec = Math.floor((Date.now() - priceTs) / 1000);
+  let color = '#10b981', label = `${ageSec}ث`;
+  if (ageSec > 60){ color = '#f43f5e'; label = `${Math.floor(ageSec/60)}د`; }
+  else if (ageSec > 15){ color = '#fbbf24'; }
+  return `<span style="background:${color}22;color:${color};padding:1px 5px;border-radius:4px;font-size:9px;font-family:monospace">${label}</span>`;
+}
+
+function getScoreColor(score){
+  if (score >= 70) return 'text-amber-400';
+  if (score >= 55) return 'text-emerald-400';
+  if (score >= 40) return 'text-cyan-400';
+  return 'text-slate-300';
+}
+
+function renderGateBadges(gates){
+  if (!gates) return '';
+  const badges = [
+    { key: 'rvol', label: 'RVOL' },
+    { key: 'cvd', label: 'CVD' },
+    { key: 'taker', label: 'Taker' },
+    { key: 'rsi', label: 'RSI' }
+  ];
+  return badges.map(b =>
+    `<span class="gate ${gates[b.key] ? 'gate-pass' : 'gate-fail'}">${gates[b.key] ? '✓' : '✗'} ${b.label}</span>`
+  ).join('');
+}
+
+function renderStrengthBadge(strength){
+  if (!strength || strength === 'WEAK') return '';
+  const cls = strength === 'STRONG' ? 'str-strong' : 'str-medium';
+  const label = strength === 'STRONG' ? '🔥 قوي' : '⚡ متوسط';
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function renderPhaseBadge(phase, label){
+  return `<span class="phase phase-${phase}">${label || phase}</span>`;
+}
+
+function renderRvolBadge(rvol, reliable, rvolRaw){
+  if (!rvol && rvol !== 0) return '';
+  const color = rvol >= 3 ? 'text-rose-400' : rvol >= 1.5 ? 'text-amber-400' : rvol >= 0.8 ? 'text-emerald-400' : 'text-slate-400';
+  const reliability = reliable === false ? ' <span class="text-[8px] text-amber-400" title="الشمعة قصيرة">⚠️</span>' : '';
+  const rawColor = rvolRaw >= 3 ? 'text-rose-400' : rvolRaw >= 1.5 ? 'text-amber-400' : rvolRaw >= 0.8 ? 'text-emerald-400' : 'text-slate-400';
+  if (rvolRaw !== undefined && rvolRaw !== null && Math.abs(rvolRaw - rvol) > 0.01){
+    return `<div class="flex flex-col items-center gap-0.5">
+      <span class="${color} font-mono text-sm font-bold">${rvol.toFixed(2)}x</span>
+      <span class="text-[8px] text-slate-500 font-mono">فعلي: <span class="${rawColor}">${rvolRaw.toFixed(2)}x</span>${reliability}</span>
+    </div>`;
+  }
+  return `<span class="${color} font-mono">${rvol.toFixed(2)}x${reliability}</span>`;
+}
+
+function renderLateBadge(change24h){
+  if (change24h > CFG.VERY_LATE_CHANGE_24H){
+    return '<span class="badge" style="background:#f43f5e33;color:#fda4af">🚨 متأخر جداً</span>';
+  } else if (change24h > CFG.LATE_CHANGE_24H){
+    return '<span class="badge" style="background:#fbbf2433;color:#fcd34d">⚠️ متأخر</span>';
+  }
+  return '';
+}
+
+function renderLateWarning(change24h){
+  if (change24h > CFG.VERY_LATE_CHANGE_24H){
+    return `<div class="mt-2 p-2 rounded text-[10px] text-center" style="background:#f43f5e22;border:1px solid #f43f5e66;color:#fda4af">
+      🚨 <b>متأخر جداً</b> — صعد +${change24h.toFixed(1)}% — الدخول الآن خطر عالٍ
+    </div>`;
+  } else if (change24h > CFG.LATE_CHANGE_24H){
+    return `<div class="mt-2 p-2 rounded text-[10px] text-center" style="background:#fbbf2422;border:1px solid #fbbf2466;color:#fcd34d">
+      ⚠️ <b>متأخر</b> — صعد +${change24h.toFixed(1)}% — انتظر تصحيح
+    </div>`;
+  }
+  return '';
+}
+
+function renderLateBorderClass(change24h){
+  if (change24h > CFG.VERY_LATE_CHANGE_24H) return 'border-l-4 border-l-rose-500';
+  if (change24h > CFG.LATE_CHANGE_24H) return 'border-l-4 border-l-amber-500';
+  return '';
+}
+
+function renderCrossBadge(cv){
+  if (!cv || cv.status === 'NONE') return '';
+  const cls = cv.status === 'CONFIRMED' ? 'badge-CONFIRMED'
+            : cv.status === 'CONFLICT' ? 'badge-CONFLICT'
+            : 'badge-PENDING';
+  return `<span class="badge ${cls}">${cv.icon} ${cv.label}</span>`;
+}
+
+function renderTimeframesWidget(r){
+  if (!r.timeframes) return '';
+  const tf = r.timeframes;
+  const count = (tf.m5.bullish ? 1 : 0) + (tf.m15.bullish ? 1 : 0) + (tf.h1.bullish ? 1 : 0);
+  const conf = count === 3 ? 'GOLD' : count === 2 ? 'SILVER' : count === 1 ? 'BRONZE' : 'NONE';
+  const confColor = conf === 'GOLD' ? 'text-amber-400' : conf === 'SILVER' ? 'text-slate-300' : conf === 'BRONZE' ? 'text-orange-400' : 'text-slate-500';
+  const rsiDisplay = tf.m5.rsiLive !== undefined ? tf.m5.rsiLive.toFixed(1) : tf.m5.rsi?.toFixed(0);
+  return `
+    <div class="grid grid-cols-3 gap-1.5 mb-2">
+      <div class="metric-box ${tf.m5.bullish ? 'border-emerald-500/40' : 'border-rose-500/30'}">
+        <div class="lbl">5M</div>
+        <div class="${tf.m5.bullish ? 'text-emerald-400' : 'text-rose-400'} text-[11px] font-bold">${tf.m5.bullish ? '✅' : '❌'}</div>
+        <div class="text-[8px] text-slate-600 font-mono">RSI ${rsiDisplay}</div>
+      </div>
+      <div class="metric-box ${tf.m15.bullish ? 'border-emerald-500/40' : 'border-rose-500/30'}">
+        <div class="lbl">15M</div>
+        <div class="${tf.m15.bullish ? 'text-emerald-400' : 'text-rose-400'} text-[11px] font-bold">${tf.m15.bullish ? '✅' : '❌'}</div>
+        <div class="text-[8px] text-slate-600 font-mono">${tf.m15.state === 'BULL' ? 'BOS↑' : tf.m15.state === 'BEAR' ? 'BOS↓' : 'Rng'}</div>
+      </div>
+      <div class="metric-box ${tf.h1.bullish ? 'border-emerald-500/40' : 'border-rose-500/30'}">
+        <div class="lbl">1H</div>
+        <div class="${tf.h1.bullish ? 'text-emerald-400' : 'text-rose-400'} text-[11px] font-bold">${tf.h1.bullish ? '✅' : '❌'}</div>
+        <div class="text-[8px] text-slate-600 font-mono">${tf.h1.bullish ? 'Bull' : 'Bear'}</div>
+      </div>
+    </div>
+    <div class="text-center text-[10px] ${confColor} font-bold mb-2">Confluence: ${conf} (${count}/3)</div>
+  `;
+}
+/* ==================================================================
+   🎯 Render Signals — القائمة الموحّدة
+   ================================================================== */
+
+function renderSignals(results){
+  const el = $('signals-list');
+  if (!el) return;
+
+  const actionable = results
+    .filter(r => r.signalType === 'GOLD' || r.signalType === 'BUY' || r.signalType === 'EARLY')
+    .filter(r => r.phase !== 'PEAK')
+    .sort((a, b) => {
+      // الأولوية: Unified Score
+      if (Math.abs(b.unifiedScore - a.unifiedScore) > 1) return b.unifiedScore - a.unifiedScore;
+      // ثم Strength
+      const order = { 'STRONG': 3, 'MEDIUM': 2, 'WEAK': 1 };
+      const aStr = order[a.signalStrength] || 0;
+      const bStr = order[b.signalStrength] || 0;
+      if (aStr !== bStr) return bStr - aStr;
+      return b.score - a.score;
+    });
+
+  const badge = $('signals-count-badge');
+  if (badge) badge.textContent = actionable.length;
+
+  if (!actionable.length){
+    el.innerHTML = `<div class="card p-12 text-center text-slate-500">
+      <i class="fa-solid fa-magnifying-glass text-3xl mb-3 block"></i>
+      <p class="text-sm">لا توجد إشارات حالياً</p>
+    </div>`;
+    return;
+  }
+  el.innerHTML = actionable.slice(0, 15).map(renderSignalCard).join('');
+  scheduleRegisterPriceCells();
+}
+
+function renderSignalCard(r){
+  const lp = getLiveTicker(r.symbol);
+  const currentPrice = lp?.price ?? r.close;
+  const priceTs = lp?.ts ?? r.priceTs;
+  const change = lp?.change ?? r.change24h ?? 0;
+  const cv = r.crossValidation;
+
+  // اختيار فئة الكارت حسب الحالة
+  let cardClass = 'card';
+  if (cv?.status === 'CONFIRMED') cardClass = 'card card-confirmed';
+  else if (r.signalType === 'GOLD') cardClass = 'card card-gold gold-glow';
+
+  const confClass = r.confluence === 'GOLD' ? 'badge-GOLD'
+    : r.confluence === 'SILVER' ? 'badge-BUY'
+    : r.confluence === 'BRONZE' ? 'badge-EARLY' : '';
+  const scoreColor = getScoreColor(r.unifiedScore);
+  const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+  const reasonsHtml = (r.reasons || []).slice(0, 6).map(reason =>
+    `<div class="text-[10px] text-emerald-400 flex items-center gap-1.5">
+      <i class="fa-solid fa-circle-check text-[8px]"></i>${reason}
+    </div>`
+  ).join('');
+
+  const warningsHtml = (r.warnings || []).slice(0, 3).map(w =>
+    `<div class="text-[10px] text-rose-400 flex items-center gap-1.5">
+      <i class="fa-solid fa-triangle-exclamation text-[8px]"></i>${w}
+    </div>`
+  ).join('');
+
+  const pnl = ((currentPrice - r.entry) / r.entry) * 100;
+  const pnlColor = pnl >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  const scorePct = clamp(r.unifiedScore, 0, 100);
+  const slPct = ((r.sl - r.entry) / r.entry * 100).toFixed(2);
+  const tpPct = ((r.tp - r.entry) / r.entry * 100).toFixed(2);
+  const lateWarning = renderLateWarning(r.change24h);
+  const lateBadge = renderLateBadge(r.change24h);
+  const borderClass = renderLateBorderClass(r.change24h);
+
+  return `
+    <div class="${cardClass} ${borderClass} p-4">
+      <div class="flex justify-between items-start mb-3 flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="text-xl font-extrabold flex items-center gap-2 flex-wrap">
+              ${r.symbol.replace('USDT','')}
+              <span class="live-dot ws-on"></span>
+              ${renderStrengthBadge(r.signalStrength)}
+              ${renderPhaseBadge(r.phase, r.phaseLabel)}
+              ${renderCrossBadge(cv)}
+              ${lateBadge}
+            </div>
+            <div class="text-sm font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+              ${renderPriceAgeBadge(priceTs)}
+            </div>
+          </div>
+          ${confClass ? `<span class="badge ${confClass}">${r.confluence}</span>` : ''}
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-24 hidden md:block">${renderSparkline(r.sparkline)}</div>
+          <div class="text-left">
+            <div class="${scoreColor} text-3xl font-extrabold font-mono">${r.unifiedScore}</div>
+            <div class="text-[8px] text-slate-500 text-center">Unified</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-bar mb-2"><div class="score-bar-fill" style="width:${scorePct}%"></div></div>
+      <div class="flex gap-1 flex-wrap mb-3">${renderGateBadges(r.gates)}</div>
+      ${renderTimeframesWidget(r)}
+
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3">
+        <div class="metric-box"><div class="val">${r.score}</div><div class="lbl">Score</div></div>
+        <div class="metric-box"><div class="val text-purple-400">${r.earlyScore}</div><div class="lbl">Early</div></div>
+        <div class="metric-box"><div class="val">${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div><div class="lbl">RVOL</div></div>
+        <div class="metric-box"><div class="val text-emerald-400">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</div><div class="lbl">Taker</div></div>
+        <div class="metric-box"><div class="val ${r.cvd > 0 ? 'text-emerald-400' : 'text-rose-400'}">${r.cvd > 0 ? '↑' : '↓'}</div><div class="lbl">CVD</div></div>
+        <div class="metric-box"><div class="val ${pnlColor}">${fmtPct(pnl)}</div><div class="lbl">P&L</div></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <div class="metric-box"><div class="lbl">دخول</div><div class="val">${fmtPrice(r.entry)}</div></div>
+        <div class="metric-box"><div class="lbl">هدف (+${tpPct}%)</div><div class="val text-emerald-400">${fmtPrice(r.tp)}</div></div>
+        <div class="metric-box"><div class="lbl">وقف (${slPct}%)</div><div class="val text-rose-400">${fmtPrice(r.sl)}</div></div>
+      </div>
+
+      <div class="text-center text-[10px] text-slate-500 mb-2">
+        R:R = <b class="text-emerald-400">${r.rr?.toFixed(2)}:1</b>
+        ${r.earlyWave ? ` · EW: <b>${r.earlyWave.state} (${r.earlyWave.score.toFixed(1)}/10)</b>` : ''}
+      </div>
+
+      <div class="space-y-1">${reasonsHtml}${warningsHtml}</div>
+      ${lateWarning}
+    </div>
+  `;
+}
+
+/* ==================================================================
+   🔒 Render Confirmed (Cross-Validated)
+   ================================================================== */
+
+function renderConfirmed(results){
+  const el = $('confirmed-list');
+  if (!el) return;
+  const confirmed = results
+    .filter(r => r.crossValidation && (r.crossValidation.status === 'CONFIRMED' || r.crossValidation.status === 'PENDING'))
+    .filter(r => r.phase !== 'PEAK')
+    .sort((a, b) => {
+      const aStr = a.crossValidation?.level === 'STRONG_CONFIRMED' ? 2 : a.crossValidation?.status === 'CONFIRMED' ? 1 : 0;
+      const bStr = b.crossValidation?.level === 'STRONG_CONFIRMED' ? 2 : b.crossValidation?.status === 'CONFIRMED' ? 1 : 0;
+      if (aStr !== bStr) return bStr - aStr;
+      return b.unifiedScore - a.unifiedScore;
+    });
+
+  const badge = $('confirmed-count-badge');
+  if (badge) badge.textContent = confirmed.length;
+
+  if (!confirmed.length){
+    el.innerHTML = `<div class="card-confirmed p-8 text-center text-slate-500">
+      <i class="fa-solid fa-shield-check text-2xl mb-2 block"></i>
+      <p class="text-sm">لا توجد إشارات مؤكدة حالياً</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = confirmed.slice(0, 12).map(r => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const cv = r.crossValidation;
+    const isStrong = cv.level === 'STRONG_CONFIRMED';
+    const cardClass = isStrong ? 'card-confirmed' : 'card-early';
+    return `
+      <div class="${cardClass} p-3">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-lg">${cv.icon}</span>
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            <span class="live-dot ws-on"></span>
+            <span class="badge ${cv.badge}">${cv.label}</span>
+            ${renderPhaseBadge(r.phase, r.phaseLabel)}
+          </div>
+          <div class="text-right">
+            <div class="text-emerald-400 text-lg font-bold font-mono">${r.unifiedScore}</div>
+            <div class="text-[8px] text-slate-500">ثقة ${cv.confidence}%</div>
+          </div>
+        </div>
+        ${renderTimeframesWidget(r)}
+        <div class="grid grid-cols-4 gap-2 text-[10px]">
+          <div><span class="text-slate-500">Scanner:</span> <b class="${r.signalType === 'GOLD' ? 'text-amber-400' : 'text-emerald-400'}">${r.signalType}</b></div>
+          <div><span class="text-slate-500">EW:</span> <b class="text-purple-400">${r.earlyWave?.state || '—'}</b></div>
+          <div><span class="text-slate-500">RVOL:</span> ${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div>
+          <div><span class="text-slate-500">R:R:</span> <b class="text-emerald-400">${r.rr?.toFixed(1) || '—'}</b></div>
+        </div>
+        <div class="text-[10px] text-slate-400 mt-2 text-center">${cv.reason}</div>
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   🌊 Render Early Wave
+   ================================================================== */
+
+function renderEarlyWave(results){
+  const el = $('earlywave-list');
+  if (!el) return;
+  const ew = results
+    .filter(r => r.earlyWave && (r.earlyWave.state === 'ENTRY' || r.earlyWave.state === 'READY' || r.earlyWave.state === 'ACCUMULATION'))
+    .sort((a, b) => {
+      const order = { 'ENTRY': 3, 'READY': 2, 'ACCUMULATION': 1 };
+      const aO = order[a.earlyWave.state] || 0;
+      const bO = order[b.earlyWave.state] || 0;
+      if (aO !== bO) return bO - aO;
+      return b.earlyWave.score - a.earlyWave.score;
+    });
+
+  if (!ew.length){
+    el.innerHTML = `<div class="card-early p-8 text-center text-slate-500">
+      <i class="fa-solid fa-water text-2xl mb-2 block animate-pulse"></i>
+      <p class="text-sm">لا توجد إشارات Early Wave حالياً</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = ew.slice(0, 15).map(r => {
+    const w = r.earlyWave;
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const stateColors = { ENTRY: '#10b981', READY: '#a855f7', ACCUMULATION: '#22d3ee' };
+    const stateColor = stateColors[w.state] || '#64748b';
+    const dot = (v) => v == null ? '<i class="text-slate-500">N/A</i>' : v ? '<i class="text-emerald-400">✓</i>' : '<i class="text-rose-400">×</i>';
+
+    return `
+      <div class="card-early p-3">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            <span class="live-dot ws-on"></span>
+            <span class="badge" style="background:${stateColor}33;color:${stateColor}">${w.state}</span>
+            ${renderCrossBadge(r.crossValidation)}
+          </div>
+          <div class="text-right">
+            <span class="text-lg font-bold font-mono" style="color:${stateColor}">${w.score.toFixed(1)}/10</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-1 text-[10px] mt-2">
+          ${w.checks.map(x => `<div>${dot(x[1])} ${x[0]}</div>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   🌱 Render Emerging
+   ================================================================== */
+
+function renderEmerging(results){
+  const el = $('emerging-list');
+  const badge = $('emerging-count-badge');
+  if (!el) return;
+  const emerging = results
+    .filter(r => r.emergingValid && r.phase !== 'PEAK')
+    .sort((a, b) => b.cvdSlope - a.cvdSlope);
+  if (badge) badge.textContent = emerging.length;
+
+  if (!emerging.length){
+    el.innerHTML = `<div class="card-growing p-8 text-center text-slate-500">
+      <i class="fa-solid fa-seedling text-2xl mb-2 block animate-pulse"></i>
+      <p class="text-sm">لا توجد فرص ناشئة حالياً</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = emerging.slice(0, 15).map(r => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    return `
+      <div class="card-growing p-3">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            <span class="live-dot ws-on"></span>
+            <span class="badge" style="background:#06b6d422;color:#67e8f9">🌱 ناشئة</span>
+          </div>
+        </div>
+        ${renderTimeframesWidget(r)}
+        <div class="grid grid-cols-4 gap-2 text-[10px]">
+          <div><span class="text-slate-500">RVOL:</span> ${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div>
+          <div><span class="text-slate-500">Taker:</span> <span class="font-mono">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</span></div>
+          <div><span class="text-slate-500">CVD:</span> <span class="${r.cvdSlope > 0 ? 'text-emerald-400' : 'text-slate-400'} font-mono">${r.cvdSlope?.toFixed(2) || '—'}</span></div>
+          <div><span class="text-slate-500">RSI:</span> <span class="font-mono">${r.rsi5Live?.toFixed(1) || '—'}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+
+/* ==================================================================
+   📈 Render Growing
+   ================================================================== */
+
+function renderGrowing(results){
+  const el = $('growing-list');
+  const badge = $('growing-count-badge');
+  if (!el) return;
+  const growing = results
+    .filter(r => r.phase === 'GROWING' || r.phase === 'BREAKOUT')
+    .sort((a, b) => {
+      const aLate = a.change24h > CFG.LATE_CHANGE_24H ? 1 : 0;
+      const bLate = b.change24h > CFG.LATE_CHANGE_24H ? 1 : 0;
+      if (aLate !== bLate) return aLate - bLate;
+      if (a.phase !== b.phase) return a.phase === 'BREAKOUT' ? -1 : 1;
+      return b.unifiedScore - a.unifiedScore;
+    });
+  if (badge) badge.textContent = growing.length;
+
+  if (!growing.length){
+    el.innerHTML = `<div class="card-growing p-8 text-center text-slate-500">
+      <i class="fa-solid fa-arrow-up-right-dots text-2xl mb-2 block animate-pulse"></i>
+      <p class="text-sm">لا توجد عملات في مرحلة النمو حالياً</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = growing.slice(0, 20).map(r => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const isBreakout = r.phase === 'BREAKOUT';
+    const phaseIcon = isBreakout ? '🚀' : '📈';
+    const phaseColor = isBreakout ? 'text-amber-400' : 'text-cyan-400';
+    const lateBadge = renderLateBadge(r.change24h);
+    const lateWarning = renderLateWarning(r.change24h);
+    const borderClass = renderLateBorderClass(r.change24h);
+
+    return `
+      <div class="card-growing p-3 ${borderClass}">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-lg">${phaseIcon}</span>
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            <span class="live-dot ws-on"></span>
+            ${renderStrengthBadge(r.signalStrength)}
+            ${renderPhaseBadge(r.phase, r.phaseLabel)}
+            ${lateBadge}
+          </div>
+          <div class="text-right">
+            <div class="${phaseColor} text-lg font-bold font-mono">${r.unifiedScore}</div>
+          </div>
+        </div>
+        ${renderTimeframesWidget(r)}
+        <div class="grid grid-cols-5 gap-2 text-[10px]">
+          <div class="text-center"><div class="text-slate-500 text-[9px]">RVOL</div><div>${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div></div>
+          <div class="text-center"><div class="text-slate-500 text-[9px]">Taker</div><div class="font-mono">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</div></div>
+          <div class="text-center"><div class="text-slate-500 text-[9px]">CVD</div><div class="${r.cvd > 0 ? 'text-emerald-400' : 'text-rose-400'}">${r.cvd > 0 ? '↑' : '↓'} ${r.cvdSlope?.toFixed(1) || '0'}</div></div>
+          <div class="text-center"><div class="text-slate-500 text-[9px]">RSI</div><div class="font-mono">${r.rsi5Live?.toFixed(1) || '—'}</div></div>
+          <div class="text-center"><div class="text-slate-500 text-[9px]">ADX</div><div class="font-mono">${r.adx?.toFixed(0) || '—'}</div></div>
+        </div>
+        ${lateWarning}
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+
+/* ==================================================================
+   ⚡ Render Early (scanner5)
+   ================================================================== */
+
+function renderEarlySignals(results){
+  const el = $('early-list');
+  if (!el) return;
+  let early = results
+    .filter(r => {
+      if (r.phase === 'PEAK') return false;
+      if (r.signalType !== 'EARLY' && r.earlyScore < CFG.EARLY_SCORE) return false;
+      if (r.rvol && r.rvol < 0.8) return false;
+      if (r.taker && (r.taker < 0.50 || r.taker > 0.70)) return false;
+      if (r.rsi5 >= CFG.GATE_MAX_RSI) return false;
+      if (r.change24h > CFG.GATE_MAX_CHANGE_24H) return false;
+      return true;
+    });
+  early.sort((a, b) => b.earlyScore - a.earlyScore);
+
+  if (!early.length){
+    el.innerHTML = `<div class="card-early p-8 text-center text-slate-500">
+      <i class="fa-solid fa-bolt text-2xl mb-2 block animate-pulse"></i>
+      <p class="text-sm">لا توجد إشارات مبكرة حالياً</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = early.slice(0, 15).map(r => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const earlyColor = r.earlyScore >= 75 ? 'text-emerald-400' : r.earlyScore >= 60 ? 'text-purple-400' : 'text-slate-400';
+    const lateBadge = renderLateBadge(r.change24h);
+    return `
+      <div class="card-early p-3">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            <span class="live-dot ws-on"></span>
+            ${renderPhaseBadge(r.phase, r.phaseLabel)}
+            ${lateBadge}
+          </div>
+          <div><span class="${earlyColor} text-lg font-bold font-mono">${r.earlyScore}</span></div>
+        </div>
+        ${renderTimeframesWidget(r)}
+        <div class="grid grid-cols-4 gap-2 text-[10px]">
+          <div><span class="text-slate-500">RVOL:</span> ${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div>
+          <div><span class="text-slate-500">Taker:</span> <span class="font-mono">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</span></div>
+          <div><span class="text-slate-500">CVD:</span> <span class="${r.cvd > 0 ? 'text-emerald-400' : 'text-rose-400'}">${r.cvd > 0 ? '↑' : '↓'}</span></div>
+          <div><span class="text-slate-500">RSI:</span> <span class="font-mono">${r.rsi5Live?.toFixed(1) || '—'}</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   🚨 Render Peaks
+   ================================================================== */
+
+function renderPeaks(results){
+  const el = $('peaks-list');
+  const badge = $('peaks-count-badge');
+  if (!el) return;
+  const peaks = results
+    .filter(r =>
+      r.phase === 'PEAK' ||
+      (r.peakWarnings && r.peakWarnings.length > 0) ||
+      r.change24h > CFG.VERY_LATE_CHANGE_24H
+    )
+    .sort((a, b) => {
+      if (a.phase !== b.phase) return a.phase === 'PEAK' ? -1 : 1;
+      if ((a.peakWarnings?.length || 0) !== (b.peakWarnings?.length || 0))
+        return (b.peakWarnings?.length || 0) - (a.peakWarnings?.length || 0);
+      return b.change24h - a.change24h;
+    });
+  if (badge) badge.textContent = peaks.length;
+
+  if (!peaks.length){
+    el.innerHTML = `<div class="card p-8 text-center text-slate-500">
+      <i class="fa-solid fa-shield-halved text-2xl mb-2 block text-emerald-400"></i>
+      <p class="text-sm">لا توجد تحذيرات</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = peaks.slice(0, 15).map(r => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const highWarnings = (r.peakWarnings || []).filter(w => w.severity === 'high').length;
+    const isVeryLate = r.change24h > CFG.VERY_LATE_CHANGE_24H;
+    const borderClass = (highWarnings > 0 || isVeryLate) ? 'card-peak' : 'card';
+    return `
+      <div class="${borderClass} p-3">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+            <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</span>
+            <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+            ${highWarnings > 0 || isVeryLate
+              ? '<span class="badge" style="background:#f43f5e22;color:#f43f5e">🚨 خطر</span>'
+              : '<span class="badge" style="background:#fbbf2422;color:#fbbf24">⚠️ تحذير</span>'}
+          </div>
+        </div>
+        ${renderTimeframesWidget(r)}
+        <div class="grid grid-cols-4 gap-2 text-[10px] mb-2">
+          <div><span class="text-slate-500">RVOL:</span> ${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</div>
+          <div><span class="text-slate-500">RSI:</span> <span class="${r.rsi5 > 75 ? 'text-rose-400 font-bold' : ''} font-mono">${r.rsi5Live?.toFixed(1)}</span></div>
+          <div><span class="text-slate-500">Taker:</span> <span class="${r.taker > 0.72 ? 'text-rose-400 font-bold' : ''} font-mono">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</span></div>
+          <div><span class="text-slate-500">24س:</span> <span class="font-mono">${fmtPct(r.change24h)}</span></div>
+        </div>
+        <div class="space-y-1">
+          ${isVeryLate ? `<div class="text-[10px] text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i>🚨 متأخر جداً (+${r.change24h.toFixed(1)}%)</div>` : ''}
+          ${(r.peakWarnings || []).slice(0, 4).map(w => `
+            <div class="text-[10px] ${w.severity === 'high' ? 'text-rose-400' : 'text-amber-400'} flex items-center gap-1.5">
+              <i class="fa-solid fa-triangle-exclamation text-[8px]"></i>${w.text}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   📊 Render Sectors
+   ================================================================== */
+
+function renderSectors(){
+  const body = $('sectors-body');
+  const chart = $('sectors-chart');
+  if (!body) return;
+
+  const sectorStats = {};
+  for (const [name, data] of Object.entries(SECTORS)){
+    let sumChange = 0, count = 0, signalCount = 0;
+    for (const sym of data.coins){
+      const r = analysisCache[sym];
+      const lp = getLiveTicker(sym);
+      if (r){
+        sumChange += (lp?.change ?? r.change24h ?? 0);
+        count++;
+        if (r.signalType !== 'NONE') signalCount++;
+      }
+    }
+    sectorStats[name] = {
+      name, icon: data.icon, color: data.color,
+      avgChange: count > 0 ? sumChange / count : 0,
+      total: data.coins.length, valid: count, signalCount
+    };
+  }
+  const sorted = Object.values(sectorStats).sort((a, b) => b.avgChange - a.avgChange);
+
+  if (chart){
+    const maxAbs = Math.max(...sorted.map(s => Math.abs(s.avgChange)), 1);
+    chart.innerHTML = `<div class="space-y-2">${sorted.map(s => {
+      const pct = (Math.abs(s.avgChange) / maxAbs) * 100;
+      const color = s.avgChange >= 0 ? '#10b981' : '#f43f5e';
+      return `<div class="flex items-center gap-3">
+        <div class="w-24 text-xs flex items-center gap-1"><span>${s.icon}</span><span class="font-bold">${s.name}</span></div>
+        <div class="flex-grow sector-bar"><div class="sector-fill" style="width:${pct}%;background:${color};opacity:.7"></div></div>
+        <div class="w-20 text-right text-xs font-mono font-bold" style="color:${color}">${fmtPct(s.avgChange)}</div>
+        <div class="w-16 text-right text-[10px] text-slate-500 font-mono">${s.valid}/${s.total}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  body.innerHTML = sorted.map((s, i) => {
+    const changeColor = s.avgChange >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const rankBg = i === 0 ? 'bg-amber-500/20 text-amber-400' : i === 1 ? 'bg-slate-400/20 text-slate-200' : i === 2 ? 'bg-orange-700/30 text-orange-400' : 'bg-slate-800 text-slate-400';
+    let status = '⚪ هادئ';
+    if (s.avgChange >= 5) status = '🔥🔥 حار جداً';
+    else if (s.avgChange >= 3) status = '🔥 حار';
+    else if (s.avgChange >= 1) status = '📈 صاعد';
+    else if (s.avgChange <= -3) status = '❄️ هابط';
+    else if (s.avgChange <= -1) status = '📉 ضعيف';
+    return `<tr class="row" onclick="showSectorDetails('${s.name}')">
+      <td class="text-center"><span class="inline-block w-7 h-7 leading-7 rounded-lg ${rankBg} text-xs font-bold">${i + 1}</span></td>
+      <td class="font-bold"><span style="color:${s.color}">${s.icon}</span> ${s.name}</td>
+      <td class="font-mono font-bold ${changeColor}">${fmtPct(s.avgChange)}</td>
+      <td class="font-mono text-slate-400">${s.valid}/${s.total}</td>
+      <td class="font-mono text-slate-400">${s.signalCount}</td>
+      <td>${status}</td>
+    </tr>`;
+  }).join('');
+}
+
+function showSectorDetails(sectorName){
+  const data = SECTORS[sectorName];
+  if (!data) return;
+  const el = $('sector-details');
+  if (!el) return;
+  const coins = data.coins.map(sym => {
+    const r = analysisCache[sym];
+    const lp = getLiveTicker(sym);
+    return {
+      sym, change: lp?.change ?? r?.change24h ?? 0,
+      price: lp?.price ?? r?.close ?? 0,
+      score: r?.score ?? 0, earlyScore: r?.earlyScore ?? 0,
+      unified: r?.unifiedScore ?? 0,
+      rvol: r?.rvol ?? 0, taker: r?.taker ?? 0,
+      signal: r?.signalType ?? 'NONE'
+    };
+  }).sort((a, b) => b.change - a.change);
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="flex justify-between items-center mb-3">
+      <h4 class="text-sm font-bold flex items-center gap-2"><span style="color:${data.color}">${data.icon}</span><span>عملات قطاع ${sectorName}</span></h4>
+      <button onclick="hideSectorDetails()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-times"></i></button>
+    </div>
+    <div class="overflow-x-auto">
+      <table style="min-width:800px">
+        <thead class="bg-slate-950"><tr>
+          <th>العملة</th><th>السعر</th><th>24س%</th><th>Unified</th>
+          <th>Score</th><th>Early</th><th>RVOL</th><th>Taker</th><th>النوع</th>
+        </tr></thead>
+        <tbody>
+          ${coins.map(c => {
+            const changeColor = c.change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+            const signalBadge = c.signal === 'GOLD' ? '<span class="badge badge-GOLD">GOLD</span>'
+                            : c.signal === 'BUY' ? '<span class="badge badge-BUY">BUY</span>'
+                            : c.signal === 'EARLY' ? '<span class="badge badge-EARLY">EARLY</span>'
+                            : '<span class="text-slate-500">—</span>';
+            return `<tr class="row">
+              <td class="font-bold">${c.sym.replace('USDT','')}</td>
+              <td class="font-mono text-slate-300" data-live-symbol="${c.sym}">${c.price ? fmtPrice(c.price) : '—'}</td>
+              <td class="font-mono ${changeColor} font-bold">${fmtPct(c.change)}</td>
+              <td class="font-mono text-amber-400 font-bold">${c.unified || '—'}</td>
+              <td class="font-mono ${c.score >= 55 ? 'text-emerald-400' : 'text-slate-400'}">${c.score || '—'}</td>
+              <td class="font-mono ${c.earlyScore >= 62 ? 'text-purple-400' : 'text-slate-400'}">${c.earlyScore || '—'}</td>
+              <td class="font-mono">${c.rvol ? c.rvol.toFixed(2) + 'x' : '—'}</td>
+              <td class="font-mono text-slate-300">${c.taker ? (c.taker*100).toFixed(0) + '%' : '—'}</td>
+              <td>${signalBadge}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  scheduleRegisterPriceCells();
+}
+
+window.hideSectorDetails = function(){
+  const el = $('sector-details');
+  if (el) el.classList.add('hidden');
+};
+
+/* ==================================================================
+   📈 Render Gainers
+   ================================================================== */
+
+function renderGainers(){
+  const body = $('gainers-body');
+  if (!body) return;
+  const gainersWithLive = latestTopGainers.map(coin => {
+    const lp = livePrices[coin.symbol];
+    return { ...coin, price: lp?.price || coin.price, change: lp?.change ?? coin.change, quoteVolume: lp?.quoteVolume || coin.quoteVolume };
+  }).sort((a, b) => b.change - a.change);
+  if (!gainersWithLive.length){
+    body.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">لا توجد بيانات</td></tr>';
+    return;
+  }
+  body.innerHTML = gainersWithLive.slice(0, 30).map((coin, idx) => {
+    const cache = analysisCache[coin.symbol];
+    const rvol = cache?.rvol || null;
+    const rank = idx + 1;
+    const rankBg = rank === 1 ? 'bg-amber-500/20 text-amber-400' : rank === 2 ? 'bg-slate-400/20 text-slate-200' : rank === 3 ? 'bg-orange-700/30 text-orange-400' : 'bg-slate-800 text-slate-400';
+    return `<tr class="row">
+      <td class="text-center"><span class="inline-block w-7 h-7 leading-7 rounded-lg ${rankBg} text-xs">${rank}</span></td>
+      <td class="font-bold">${coin.baseAsset}</td>
+      <td class="font-mono font-bold" data-live-symbol="${coin.symbol}">${fmtPrice(coin.price)}</td>
+      <td class="font-mono font-bold text-emerald-400">+${coin.change.toFixed(2)}%</td>
+      <td class="font-mono">${rvol ? rvol.toFixed(2)+'x' : '—'}</td>
+      <td class="font-mono text-slate-400">${fmtVol(coin.quoteVolume)}</td>
+    </tr>`;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+
+/* ==================================================================
+   📋 Render All Coins
+   ================================================================== */
+
+function renderAllCoins(){
+  const body = $('all-body');
+  const countEl = $('all-count');
+  if (!body) return;
+  const search = ($('all-search')?.value || '').trim().toUpperCase();
+  const sortBy = $('all-sort')?.value || 'unified';
+  let coins = Object.values(analysisCache).filter(c => c.score >= 40 || c.earlyScore >= 40);
+  if (search) coins = coins.filter(c => c.symbol.includes(search));
+  switch(sortBy){
+    case 'unified': coins.sort((a, b) => b.unifiedScore - a.unifiedScore); break;
+    case 'score': coins.sort((a, b) => b.score - a.score); break;
+    case 'early': coins.sort((a, b) => b.earlyScore - a.earlyScore); break;
+    case 'phase': coins.sort((a, b) => a.phasePriority - b.phasePriority); break;
+    case 'change': coins.sort((a, b) => (getLiveTicker(b.symbol)?.change ?? 0) - (getLiveTicker(a.symbol)?.change ?? 0)); break;
+    case 'rvol': coins.sort((a, b) => (b.rvol || 0) - (a.rvol || 0)); break;
+  }
+  if (countEl) countEl.textContent = coins.length;
+  if (!coins.length){
+    body.innerHTML = '<tr><td colspan="14" class="text-center py-8 text-slate-500">لا توجد بيانات</td></tr>';
+    return;
+  }
+  body.innerHTML = coins.slice(0, 200).map((r, idx) => {
+    const lp = getLiveTicker(r.symbol);
+    const currentPrice = lp?.price ?? r.close;
+    const change = lp?.change ?? r.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const quoteVol = lp?.quoteVolume || r.quoteVolume || 0;
+    const typeBadge = r.signalType === 'GOLD' ? '<span class="badge badge-GOLD">GOLD</span>'
+                     : r.signalType === 'BUY' ? '<span class="badge badge-BUY">BUY</span>'
+                     : r.signalType === 'EARLY' ? '<span class="badge badge-EARLY">EARLY</span>'
+                     : '<span class="text-slate-500">—</span>';
+    const scoreColor = getScoreColor(r.unifiedScore);
+    const lateBadge = renderLateBadge(r.change24h);
+    return `<tr class="row">
+      <td class="text-slate-500 font-mono">${idx+1}</td>
+      <td class="font-bold"><div class="flex items-center gap-1">${r.symbol.replace('USDT','')}<span class="live-dot ws-on"></span>${lateBadge}</div></td>
+      <td class="font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(currentPrice)}</td>
+      <td class="font-mono ${changeColor} font-bold">${fmtPct(change)}</td>
+      <td>${renderPhaseBadge(r.phase, r.phaseLabel)}</td>
+      <td class="font-mono font-bold ${scoreColor}">${r.unifiedScore}</td>
+      <td class="font-mono ${r.score >= 55 ? 'text-emerald-400' : 'text-slate-400'}">${r.score}</td>
+      <td class="font-mono ${r.earlyScore >= 60 ? 'text-purple-400' : 'text-slate-400'}">${r.earlyScore}</td>
+      <td>${typeBadge}</td>
+      <td class="font-mono">${renderRvolBadge(r.rvol, r.rvolReliable, r.rvolRaw)}</td>
+      <td class="font-mono text-slate-300">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</td>
+      <td class="font-mono text-slate-300">${r.rsi5Live?.toFixed(1) || '—'}</td>
+      <td class="font-mono text-slate-300">${r.adx?.toFixed(0) || '—'}</td>
+      <td class="font-mono text-slate-400">${fmtVol(quoteVol)}</td>
+    </tr>`;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   ⭐ Render Watchlist
+   ================================================================== */
+
+function renderWatchlistPanel(){
+  const grid = $('watchlist-grid');
+  if (!grid) return;
+  updateWatchlistBadge();
+  if (!customWatchlist.length){
+    grid.innerHTML = '<p class="text-slate-500 text-sm text-center py-8 col-span-full">لا توجد عملات في المفضلة</p>';
+    return;
+  }
+  const cards = [];
+  for (const sym of customWatchlist){
+    const r = analysisCache[sym];
+    const lp = getLiveTicker(sym);
+    if (!r && !lp){
+      cards.push(`<div class="card p-4 opacity-70">
+        <div class="flex justify-between items-center mb-3">
+          <div>
+            <div class="text-lg font-extrabold text-slate-400">${sym.replace('USDT','')}</div>
+            <div class="text-xs text-slate-500">جاري التحليل...</div>
+          </div>
+          <button onclick="removeCustomPair('${sym}');renderWatchlistPanel();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      </div>`);
+      continue;
+    }
+    const currentPrice = lp?.price ?? r?.close ?? 0;
+    const change = lp?.change ?? r?.change24h ?? 0;
+    const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const score = r?.unifiedScore || 0;
+    const signalType = r?.signalType || 'NONE';
+    let cardClass = 'card';
+    let statusBadge = '';
+    if (r?.crossValidation?.status === 'CONFIRMED'){
+      cardClass = 'card card-confirmed';
+      statusBadge = `<span class="badge badge-CONFIRMED">${r.crossValidation.icon} ${r.crossValidation.label}</span>`;
+    } else if (signalType === 'GOLD'){
+      cardClass = 'card card-gold gold-glow';
+      statusBadge = '<span class="badge badge-GOLD">🥇 GOLD</span>';
+    } else if (signalType === 'BUY'){
+      statusBadge = '<span class="badge badge-BUY">🟢 BUY</span>';
+    } else if (signalType === 'EARLY'){
+      cardClass = 'card card-early';
+      statusBadge = '<span class="badge badge-EARLY">⚡ EARLY</span>';
+    } else {
+      statusBadge = '<span class="text-[9px] px-2 py-1 bg-slate-800 text-slate-500 rounded-full font-bold">⚪ لا إشارة</span>';
+    }
+    const scoreColor = getScoreColor(score);
+    const lateBadge = r ? renderLateBadge(r.change24h) : '';
+    cards.push(`
+      <div class="${cardClass} p-4">
+        <div class="flex justify-between items-start mb-3">
+          <div class="flex items-center gap-3">
+            <div>
+              <div class="text-lg font-extrabold flex items-center gap-2 flex-wrap">${sym.replace('USDT','')}<span class="live-dot ws-on"></span>${lateBadge}</div>
+              <div class="text-sm font-mono font-bold" data-live-symbol="${sym}">${fmtPrice(currentPrice)}</div>
+              <div class="flex items-center gap-2 mt-0.5">
+                <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+                ${r ? renderPhaseBadge(r.phase, r.phaseLabel) : ''}
+              </div>
+            </div>
+            ${statusBadge}
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-right">
+              <div class="${scoreColor} text-2xl font-extrabold font-mono">${score}</div>
+              <div class="text-[8px] text-slate-500 text-center">Unified</div>
+            </div>
+            <button onclick="removeCustomPair('${sym}');renderWatchlistPanel();" class="text-rose-400 hover:text-rose-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>
+        </div>
+        ${r ? `<div class="w-full h-8 mb-3">${renderSparkline(r.sparkline)}</div>` : ''}
+        ${r ? renderTimeframesWidget(r) : ''}
+        ${r ? `<div class="grid grid-cols-5 gap-2 mb-3">
+          <div class="metric-box"><div class="val">${r.score}</div><div class="lbl">Score</div></div>
+          <div class="metric-box"><div class="val text-purple-400">${r.earlyScore}</div><div class="lbl">Early</div></div>
+          <div class="metric-box"><div class="val">${r.rvol?.toFixed(1) || '—'}x</div><div class="lbl">RVOL</div></div>
+          <div class="metric-box"><div class="val text-emerald-400">${r.taker ? (r.taker*100).toFixed(0) : '—'}%</div><div class="lbl">Taker</div></div>
+          <div class="metric-box"><div class="val ${r.cvd > 0 ? 'text-emerald-400' : 'text-rose-400'}">${r.cvd > 0 ? '↑' : '↓'}</div><div class="lbl">CVD</div></div>
+        </div>` : ''}
+        ${r?.earlyWave ? `<div class="text-[10px] text-center mt-2">Early Wave: <b>${r.earlyWave.state} (${r.earlyWave.score.toFixed(1)}/10)</b></div>` : ''}
+      </div>
+    `);
+  }
+  grid.innerHTML = cards.join('');
+  scheduleRegisterPriceCells();
+}
+
+/* ==================================================================
+   📜 Render History + Attribution
+   ================================================================== */
+
+function renderHistory(){
+  const body = $('history-body');
+  const stats = $('history-stats');
+  const attrBox = $('attribution-box');
+  if (!body || !stats) return;
+
+  const total = signalHistory.length;
+  const active = signalHistory.filter(s => s.status === 'ACTIVE').length;
+  const won = signalHistory.filter(s => s.status === 'WON').length;
+  const lost = signalHistory.filter(s => s.status === 'LOST').length;
+  const winRate = (won + lost) > 0 ? (won / (won + lost) * 100) : null;
+  const confirmed = signalHistory.filter(s => s.crossValidation?.status === 'CONFIRMED').length;
+
+  stats.innerHTML = `
+    <div class="metric-box"><div class="lbl">إجمالي</div><div class="val">${total}</div></div>
+    <div class="metric-box"><div class="lbl">نشطة</div><div class="val text-amber-400">${active}</div></div>
+    <div class="metric-box"><div class="lbl">رابحة</div><div class="val text-emerald-400">${won}</div></div>
+    <div class="metric-box"><div class="lbl">خاسرة</div><div class="val text-rose-400">${lost}</div></div>
+    <div class="metric-box"><div class="lbl">مؤكدة</div><div class="val text-emerald-300">${confirmed}</div></div>
+    <div class="metric-box"><div class="lbl">نسبة النجاح</div><div class="val ${winRate >= 60 ? 'text-emerald-400' : winRate >= 45 ? 'text-amber-400' : 'text-rose-400'}">${winRate ? winRate.toFixed(1)+'%' : '—'}</div></div>
+  `;
+
+  // Attribution Box
+  if (attrBox){
+    const attr = computeAttributionStats();
+    const srcLabel = { scanner: 'Scanner (5M)', dashboard: 'Dashboard (EW)', both: 'كلاهما (الأقوى)' };
+    const srcColor = { scanner: '#22d3ee', dashboard: '#a855f7', both: '#10b981' };
+    attrBox.innerHTML = `
+      <div class="text-[11px] font-bold text-slate-300 mb-2">📊 أداء المصادر (Attribution)</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        ${['both', 'dashboard', 'scanner'].map(src => {
+          const d = attr[src] || {};
+          const wr = d.winRate;
+          return `<div class="metric-box" style="border-color:${srcColor[src]}66">
+            <div class="text-[10px] font-bold" style="color:${srcColor[src]}">${srcLabel[src]}</div>
+            <div class="flex justify-between mt-1 text-[10px]">
+              <span class="text-slate-500">صفقات:</span><b>${d.total || 0}</b>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span class="text-slate-500">Win%:</span>
+              <b class="${wr >= 60 ? 'text-emerald-400' : wr >= 45 ? 'text-amber-400' : 'text-rose-400'}">${wr ? wr.toFixed(1)+'%' : '—'}</b>
+            </div>
+            <div class="flex justify-between text-[10px]">
+              <span class="text-slate-500">Avg P&L:</span>
+              <b class="${d.avgPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${(d.avgPnl || 0).toFixed(2)}%</b>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  if (!signalHistory.length){
+    body.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">لا توجد إشارات</td></tr>';
+    return;
+  }
+  const srcLabelShort = { scanner: '📡', dashboard: '🌊', both: '🔒' };
+  body.innerHTML = signalHistory.slice(0, 100).map(sig => {
+    const lp = getLiveTicker(sig.symbol);
+    const livePrice = lp?.price || sig.currentPrice;
+    const livePnl = ((livePrice - sig.entry) / sig.entry) * 100;
+    const statusClass = sig.status === 'ACTIVE' ? 'text-amber-400' : sig.status === 'WON' ? 'text-emerald-400' : sig.status === 'LOST' ? 'text-rose-400' : 'text-slate-400';
+    const pnlClass = livePnl >= 0 ? 'text-emerald-400' : 'text-rose-400';
+    const sourceBadge = sig.crossValidation?.status === 'CONFIRMED'
+      ? `<span class="badge badge-CONFIRMED">🔒 ${sig.source === 'both' ? 'Both' : sig.source}</span>`
+      : `<span class="text-[9px]" title="${sig.source}">${srcLabelShort[sig.source] || '•'}</span>`;
+    return `<tr class="row">
+      <td class="text-[10px] text-slate-400 font-mono">${new Date(sig.timestamp).toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</td>
+      <td class="font-bold">${sig.symbol.replace('USDT','')}</td>
+      <td><span class="badge ${sig.signalType === 'GOLD' ? 'badge-GOLD' : sig.signalType === 'EARLY' ? 'badge-EARLY' : 'badge-BUY'}">${sig.signalType}</span></td>
+      <td>${sourceBadge}</td>
+      <td class="font-mono">${sig.unifiedScore || sig.score}</td>
+      <td class="font-mono text-slate-400">${fmtPrice(sig.entry)}</td>
+      <td class="font-mono font-bold" data-live-symbol="${sig.symbol}">${fmtPrice(livePrice)}</td>
+      <td class="font-mono ${pnlClass} font-bold">${fmtPct(livePnl)}</td>
+      <td class="text-center ${statusClass} text-[10px] font-bold">${sig.status}</td>
+    </tr>`;
+  }).join('');
+  scheduleRegisterPriceCells();
+}
+/* ==================================================================
+   🖼️ Canvas Draw — 4 لوحات (سعر + حجم + RSI + MACD)
+   ================================================================== */
+
+const VW = { n: 90, off: 0 };
+let CH = null;
+const DVC = { rb: '#22c55e', hb: '#38bdf8', eb: '#a78bfa', rs: '#ef4444', hs: '#f97316', es: '#f472b6' };
+const DVN = {
+  rb: ['R↑', 'تباعد صاعد عادي'], hb: ['H↑', 'تباعد صاعد خفي'],
+  eb: ['E↑', 'تباعد صاعد مبالغ فيه'], rs: ['R↓', 'تباعد هابط عادي'],
+  hs: ['H↓', 'تباعد هابط خفي'], es: ['E↓', 'تباعد هابط مبالغ فيه']
+};
+
+function draw(a, hv){
+  CH = a;
+  const cv = $('cv');
+  if (!cv) return;
+  const x = cv.getContext('2d');
+  const dpr = (typeof devicePixelRatio == 'number' ? devicePixelRatio : 1);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr;
+  cv.height = H * dpr;
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.clearRect(0, 0, W, H);
+
+  const on = o => {
+    const el = document.querySelector(`#deep-card [data-o=${o}]`) ||
+               document.querySelector(`[data-o=${o}]`);
+    return el ? el.checked : false;
+  };
+
+  const Ls = a.L;
+  const Z = Ls.length;
+  const N = Math.max(15, Math.min(VW.n, Z));
+  const off = Math.max(0, Math.min(VW.off, Z - N));
+  const s0 = Z - N - off, e = s0 + N;
+  VW.off = off;
+  const I = a.ind;
+
+  const PL = 8, PR = 66, top = 20;
+  const cw = (W - PL - PR) / N;
+  const X = i => PL + (i - s0) * cw + cw / 2;
+  const bw = Math.max(1, cw * .68);
+
+  const gp = 6;
+  const tot = H - top - 24 - 3 * gp;
+  const hs = [.58, .1, .16, .16].map(f => f * tot);
+  const ys = [top];
+  for (let i = 1; i < 4; i++) ys.push(ys[i - 1] + hs[i - 1] + gp);
+
+  const vis = Ls.slice(s0, e);
+  const h0 = Math.max(...vis.map(v => v.h));
+  const l0 = Math.min(...vis.map(v => v.l));
+  const pd = (h0 - l0) * .07 || h0 * .01;
+  const hi = h0 + pd, lo = l0 - pd;
+  const Y = p => ys[0] + (hi - p) / (hi - lo) * hs[0];
+  const P = a.price;
+  const vf = v => v.v != null ? v.v : v.q;
+
+  x.font = '11px system-ui,Segoe UI,Tahoma,sans-serif';
+  x.textBaseline = 'middle';
+
+  // خلفية اللوحات
+  ys.forEach((y, i) => {
+    x.fillStyle = '#0e1320';
+    x.fillRect(PL, y, W - PL - PR, hs[i]);
+    x.strokeStyle = '#1c2437';
+    x.lineWidth = 1;
+    x.strokeRect(PL + .5, y + .5, W - PL - PR - 1, hs[i] - 1);
+  });
+
+  // شبكة السعر
+  x.textAlign = 'left';
+  x.fillStyle = '#8791a7';
+  for (let i = 0; i <= 5; i++){
+    const p = lo + (hi - lo) * i / 5;
+    const y = Y(p);
+    x.strokeStyle = '#18202f';
+    x.beginPath();
+    x.moveTo(PL, y);
+    x.lineTo(W - PR, y);
+    x.stroke();
+    x.fillText(fmtPrice(p), W - PR + 4, y);
+  }
+
+  // شبكة زمنية
+  const stp = Math.ceil(N / 7);
+  for (let i = s0; i < e; i += stp){
+    const d = new Date(Ls[i].t);
+    const xx = X(i);
+    x.strokeStyle = '#161d2c';
+    x.beginPath();
+    x.moveTo(xx, ys[0]);
+    x.lineTo(xx, ys[3] + hs[3]);
+    x.stroke();
+    x.fillStyle = '#8791a7';
+    x.textAlign = 'center';
+    x.fillText(`${d.getDate()}/${d.getMonth() + 1} ${String(d.getHours()).padStart(2, '0')}:00`, xx, H - 10);
+  }
+
+  // أدوات
+  const tags = [];
+  const tag = (p, c, t) => { if (typeof p == 'number' && isFinite(p)) tags.push([p, c, t]); };
+  const ln = (p, c, w, dash) => {
+    if (typeof p != 'number' || p < lo || p > hi) return;
+    x.strokeStyle = c;
+    x.lineWidth = w || 1;
+    x.setLineDash(dash || []);
+    x.beginPath();
+    x.moveTo(PL, Y(p));
+    x.lineTo(W - PR, Y(p));
+    x.stroke();
+    x.setLineDash([]);
+  };
+  const poly = (arr, c, w) => {
+    x.strokeStyle = c;
+    x.lineWidth = w;
+    x.setLineDash([]);
+    x.beginPath();
+    let go = 0;
+    for (let i = s0; i < e; i++){
+      const v = arr[i];
+      if (v == null || v < lo || v > hi){ go = 0; continue; }
+      go ? x.lineTo(X(i), Y(v)) : x.moveTo(X(i), Y(v));
+      go = 1;
+    }
+    x.stroke();
+  };
+
+  x.save();
+  x.beginPath();
+  x.rect(PL, ys[0], W - PL - PR, hs[0]);
+  x.clip();
+
+  // Volume Profile
+  const V = a.x && a.x.vp;
+  if (on('vp') && V){
+    const mx = Math.max(...V.bins);
+    const ww = (W - PL - PR) * .16;
+    V.bins.forEach((b, i) => {
+      const p0 = V.lo + i * V.st, p1 = p0 + V.st;
+      const inVA = p1 > V.val && p0 < V.vah;
+      x.fillStyle = inVA ? '#e879f940' : '#64748b30';
+      x.fillRect(PL, Y(p1), b / mx * ww, Math.max(1, Y(p0) - Y(p1) - 1));
+    });
+    ln(V.poc, '#e879f9', 1.2);
+    ln(V.vah, '#64748b', 1, [3, 4]);
+    ln(V.val, '#64748b', 1, [3, 4]);
+    tag(V.poc, '#e879f9', 'POC');
+    tag(V.vah, '#64748b', 'VAH');
+    tag(V.val, '#64748b', 'VAL');
+  }
+
+  // Bollinger
+  if (on('bb')){
+    const b = I.bb;
+    const idx = [];
+    for (let i = s0; i < e; i++) if (b[i]) idx.push(i);
+    if (idx.length){
+      x.fillStyle = '#64748b22';
+      x.beginPath();
+      idx.forEach((i, j) => j ? x.lineTo(X(i), Y(b[i].u)) : x.moveTo(X(i), Y(b[i].u)));
+      for (let j = idx.length - 1; j >= 0; j--) x.lineTo(X(idx[j]), Y(b[idx[j]].l));
+      x.fill();
+      [['u', '#94a3b8'], ['l', '#94a3b8'], ['m', '#64748b']].forEach(([q, c]) => poly(b.map(o => o && o[q]), c, 1));
+    }
+  }
+
+  // S/R
+  if (on('sr') && a.lv){
+    a.lv.filter(l => Math.abs(l.p / P - 1) < .15 && (l.n >= 2 || Math.abs(l.p / P - 1) < .04))
+      .sort((u, v) => Math.abs(u.p - P) - Math.abs(v.p - P))
+      .slice(0, 6)
+      .forEach(l => {
+        const c = l.p < P ? '#22c55e' : '#ef4444';
+        ln(l.p, c, l.n > 1 ? 1.6 : 1, [6, 4]);
+        tag(l.p, c, (l.p < P ? 'S' : 'R') + (l.n > 1 ? l.n : ''));
+      });
+  }
+
+  // FVG + Sweep
+  if (on('fvg') && a.gaps){
+    a.gaps.filter(g => g.hi > lo && g.lo < hi)
+      .sort((u, v) => Math.abs((u.lo + u.hi) / 2 - P) - Math.abs((v.lo + v.hi) / 2 - P))
+      .slice(0, 4)
+      .forEach(g => {
+        const x0 = Math.max(PL, X(g.i - 2));
+        x.fillStyle = g.t == 'bull' ? '#22c55e22' : '#ef444422';
+        x.fillRect(x0, Y(g.hi), W - PR - x0, Math.max(2, Y(g.lo) - Y(g.hi)));
+        x.fillStyle = g.t == 'bull' ? '#22c55e' : '#ef4444';
+        x.textAlign = 'left';
+        x.fillText('FVG', x0 + 3, Y(g.hi) + 7);
+      });
+    const q = a.x && a.x.sw;
+    if (q){
+      const x0 = Math.max(PL, X(q.j - 2));
+      x.fillStyle = '#22d3ee30';
+      x.fillRect(x0, Y(q.z[1]), W - PR - x0, Math.max(2, Y(q.z[0]) - Y(q.z[1])));
+      x.strokeStyle = x.fillStyle = '#22d3ee';
+      x.lineWidth = 2;
+      x.beginPath();
+      x.arc(X(q.i), Y(q.low), 8, 0, 7);
+      x.stroke();
+      x.textAlign = 'center';
+      x.fillText('SWEEP', X(q.i), Y(q.low) + 20);
+      tag(q.ce, '#22d3ee', 'ENTRY');
+      tag(q.stop, '#ef4444', 'SL*');
+    }
+  }
+
+  // Patterns
+  if (on('pat') && a.pats){
+    a.pats.slice(0, 2).forEach((m, j) => {
+      x.setLineDash([]);
+      (m.lines || []).forEach(l => {
+        x.strokeStyle = l.c || '#f59e0b';
+        x.lineWidth = 1.6;
+        x.beginPath();
+        x.moveTo(X(l.a[0]), Y(l.a[1]));
+        x.lineTo(X(l.b[0]), Y(l.b[1]));
+        x.stroke();
+      });
+      (m.pts || []).forEach(q => {
+        x.fillStyle = '#f59e0b';
+        x.beginPath();
+        x.arc(X(q[0]), Y(q[1]), 3, 0, 7);
+        x.fill();
+      });
+      x.fillStyle = '#f59e0b';
+      x.textAlign = 'left';
+      x.fillText('▸ ' + m.name + ' · ' + m.status, PL + 6, ys[0] + 12 + j * 14);
+    });
+  }
+
+  // Divergences
+  if (on('div') && a.x.dvs){
+    a.x.dvs.filter(d => d.i2 >= s0 && d.i1 < e).forEach(d => {
+      const c = DVC[d.type];
+      x.strokeStyle = c;
+      x.lineWidth = d.type[0] == 'r' ? 2 : 1.4;
+      x.setLineDash(d.type[0] == 'r' ? [] : [5, 4]);
+      x.beginPath();
+      x.moveTo(X(d.i1), Y(d.p1));
+      x.lineTo(X(d.i2), Y(d.p2));
+      x.stroke();
+      x.setLineDash([]);
+      x.fillStyle = c;
+      x.textAlign = 'center';
+      x.fillText(DVN[d.type][0], X(d.i2), Y(d.p2) + (d.dir == 'bull' ? 14 : -14));
+    });
+  }
+
+  // Plan
+  if (on('plan') && a.plans){
+    a.plans.forEach((p, j) => {
+      if (p.z && p.z[1] > lo && p.z[0] < hi){
+        x.fillStyle = '#4f8cff22';
+        x.fillRect(PL, Y(p.z[1]), W - PL - PR, Math.max(2, Y(p.z[0]) - Y(p.z[1])));
+      }
+      if (p.sl) ln(p.sl, '#ef4444', 1, [2, 3]);
+      if (p.tp1) ln(p.tp1, '#22c55e', 1, [2, 3]);
+      if (p.tp2) ln(p.tp2, '#16a34a', 1, [2, 3]);
+    });
+  }
+
+  // EMA
+  if (on('ema')){
+    poly(I.e20, '#facc15', 1.2);
+    poly(I.e50, '#38bdf8', 1.2);
+    poly(I.e200, '#a855f7', 2);
+  }
+
+  // Candlesticks
+  for (let i = s0; i < e; i++){
+    const v = Ls[i];
+    const c = v.c >= v.o ? '#22c55e' : '#ef4444';
+    const xx = X(i);
+    const yo = Y(v.o), yc = Y(v.c);
+    x.strokeStyle = x.fillStyle = c;
+    x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(xx, Y(v.h));
+    x.lineTo(xx, Y(v.l));
+    x.stroke();
+    x.fillRect(xx - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc)));
+  }
+
+  // سعر حالي
+  ln(P, '#4f8cff', 1, [1, 3]);
+  tag(P, '#4f8cff', fmtPrice(P));
+
+  x.restore();
+
+  // الوسوم اليمنى
+  tags.map(t => ({
+    y: t[0] > hi ? ys[0] + 9 : t[0] < lo ? ys[0] + hs[0] - 9 : Y(t[0]),
+    c: t[1], t: t[2] + (t[0] > hi ? '▲' : t[0] < lo ? '▼' : '')
+  })).sort((u, v) => u.y - v.y).forEach((t, i, ar) => {
+    if (i && t.y - ar[i - 1].y < 14) t.y = ar[i - 1].y + 14;
+    x.fillStyle = t.c;
+    x.fillRect(W - PR + 1, t.y - 7, PR - 3, 14);
+    x.fillStyle = '#0b0e14';
+    x.textAlign = 'left';
+    x.fillText(t.t.slice(0, 9), W - PR + 4, t.y);
+  });
+
+  // Volume
+  const vm = Math.max(...vis.map(vf)) || 1;
+  for (let i = s0; i < e; i++){
+    const v = Ls[i];
+    const h = vf(v) / vm * (hs[1] - 4);
+    x.fillStyle = v.c >= v.o ? '#22c55e88' : '#ef444488';
+    x.fillRect(X(i) - bw / 2, ys[1] + hs[1] - h, bw, h);
+  }
+
+  // RSI
+  const Yr = r => ys[2] + (100 - r) / 100 * hs[2];
+  [30, 50, 70].forEach(r => {
+    x.strokeStyle = r == 50 ? '#18202f' : '#2a3550';
+    x.setLineDash(r == 50 ? [] : [4, 4]);
+    x.beginPath();
+    x.moveTo(PL, Yr(r));
+    x.lineTo(W - PR, Yr(r));
+    x.stroke();
+    x.setLineDash([]);
+    x.fillStyle = '#8791a7';
+    x.textAlign = 'left';
+    x.fillText(r, W - PR + 4, Yr(r));
+  });
+  x.strokeStyle = '#a78bfa';
+  x.lineWidth = 1.5;
+  x.beginPath();
+  let g1 = 0;
+  for (let i = s0; i < e; i++){
+    const r = I.rsi[i];
+    if (r == null){ g1 = 0; continue; }
+    g1 ? x.lineTo(X(i), Yr(r)) : x.moveTo(X(i), Yr(r));
+    g1 = 1;
+  }
+  x.stroke();
+
+  // MACD
+  const mv = [];
+  for (let i = s0; i < e; i++) [I.m[i], I.g[i], I.h[i]].forEach(v => v != null && mv.push(Math.abs(v)));
+  const mm = Math.max(...mv, 1e-12) * 1.15;
+  const Ym = v => ys[3] + hs[3] / 2 - v / mm * (hs[3] / 2 - 3);
+  x.strokeStyle = '#2a3550';
+  x.beginPath();
+  x.moveTo(PL, Ym(0));
+  x.lineTo(W - PR, Ym(0));
+  x.stroke();
+  for (let i = s0; i < e; i++){
+    const h = I.h[i];
+    if (h == null) continue;
+    const pv = I.h[i - 1];
+    x.fillStyle = h >= 0 ? (pv != null && h < pv ? '#22c55e66' : '#22c55ecc') : (pv != null && h > pv ? '#ef444466' : '#ef4444cc');
+    x.fillRect(X(i) - bw / 2, Math.min(Ym(0), Ym(h)), bw, Math.max(1, Math.abs(Ym(h) - Ym(0))));
+  }
+  [[I.m, '#38bdf8'], [I.g, '#f59e0b']].forEach(([arr, c]) => {
+    x.strokeStyle = c;
+    x.lineWidth = 1.3;
+    x.beginPath();
+    let gg = 0;
+    for (let i = s0; i < e; i++){
+      const v = arr[i];
+      if (v == null){ gg = 0; continue; }
+      gg ? x.lineTo(X(i), Ym(v)) : x.moveTo(X(i), Ym(v));
+      gg = 1;
+    }
+    x.stroke();
+  });
+
+  x.fillStyle = '#8791a7';
+  x.textAlign = 'left';
+  x.fillText('Vol', PL + 4, ys[1] + 8);
+  x.fillText('RSI(14)', PL + 4, ys[2] + 8);
+  x.fillText('MACD(12,26,9)', PL + 4, ys[3] + 8);
+
+  // معلومات
+  const hh = hv != null ? hv : e - 1;
+  const c = Ls[hh];
+  const f5 = v => v == null ? '–' : (+v).toPrecision(4);
+  x.fillStyle = '#e6e9f0';
+  x.textAlign = 'left';
+  x.fillText(`${new Date(c.t).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}  O ${fmtPrice(c.o)}  H ${fmtPrice(c.h)}  L ${fmtPrice(c.l)}  C ${fmtPrice(c.c)}  Vol ${fmtVol(vf(c))}  RSI ${I.rsi[hh] == null ? '–' : I.rsi[hh].toFixed(1)}  MACD ${f5(I.m[hh])} / ${f5(I.g[hh])} / ${f5(I.h[hh])}`, PL + 2, 10);
+
+  a._g = { PL, cw, s0, N, W, PR, Z };
+}
+
+function setView(n, off){
+  VW.n = n;
+  VW.off = off;
+  if (CH) draw(CH);
+}
+
+function zoomAt(f, fr){
+  const g = CH && CH._g;
+  if (!g) return;
+  const n2 = Math.max(15, Math.min(g.Z, Math.round(g.N * f)));
+  const ic = g.s0 + fr * g.N;
+  const s02 = ic - fr * n2;
+  setView(n2, Math.max(0, Math.min(g.Z - n2, Math.round(g.Z - n2 - s02))));
+}
+
+/* ربط أحداث Canvas */
+let cvBound = false;
+function bindCanvasEvents(){
+  if (cvBound) return;
+  const cvE = $('cv');
+  if (!cvE) return;
+  cvBound = true;
+
+  let DR = null;
+  cvE.addEventListener('wheel', e => {
+    e.preventDefault();
+    const g = CH && CH._g;
+    if (!g) return;
+    zoomAt(e.deltaY > 0 ? 1.15 : 1 / 1.15, Math.max(0, Math.min(1,
+      (e.clientX - cvE.getBoundingClientRect().left - g.PL) / (g.W - g.PL - g.PR))));
+  }, { passive: false });
+
+  cvE.addEventListener('pointerdown', e => {
+    DR = { x: e.clientX, off: VW.off };
+    try { cvE.setPointerCapture(e.pointerId); } catch(_) {}
+  });
+  cvE.addEventListener('pointerup', () => { DR = null; });
+
+  let rafId = null, pendingHover = null;
+  cvE.addEventListener('pointermove', e => {
+    if (!CH) return;
+    const g = CH._g;
+    if (DR){
+      setView(VW.n, Math.max(0, Math.min(g.Z - g.N, DR.off + Math.round((e.clientX - DR.x) / g.cw))));
+      return;
+    }
+    const i = Math.floor((e.clientX - cvE.getBoundingClientRect().left - g.PL) / g.cw);
+    if (i < 0 || i >= g.N) return;
+    pendingHover = g.s0 + i;
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = null;
+      draw(CH, pendingHover);
+    });
+  });
+  cvE.addEventListener('pointerleave', () => {
+    DR = null;
+    if (rafId){ cancelAnimationFrame(rafId); rafId = null; }
+    if (CH) draw(CH);
+  });
+  cvE.addEventListener('dblclick', () => setView(90, 0));
+
+  // On chart options change
+  document.addEventListener('change', e => {
+    const t = e.target;
+    if (t && t.dataset && t.dataset.o){
+      if (CH) draw(CH);
+    }
+  });
+}
+/* ==================================================================
+   🎯 Deep Analysis — فتح عملة في Canvas
+   ================================================================== */
+
+async function openDeepAnalysis(sym){
+  if (!sym){
+    const inp = $('deep-search');
+    if (!inp) return;
+    sym = inp.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!sym) return;
+    if (!sym.endsWith('USDT')) sym += 'USDT';
+  }
+
+  const card = $('deep-card');
+  const plan = $('deep-plan');
+  const chT = $('chT') || document.createElement('div');
+  if (card) card.innerHTML = '<div class="text-center text-slate-500 py-8"><i class="fa-solid fa-spinner spinner text-2xl mb-2"></i><p>جاري التحميل...</p></div>';
+  if (plan) plan.innerHTML = '';
+
+  try {
+    const ticker = (await fetchTicker24h()).find(x => x.symbol === sym);
+    if (!ticker) throw new Error('الزوج غير موجود');
+
+    const [c4, c1, c15] = await Promise.all([
+      ensureK('4h', sym, 1000),
+      ensureK('1h', sym, 500).catch(() => null),
+      ensureK('15m', sym, 500).catch(() => null)
+    ]);
+
+    // Subscribe WebSocket للعملة
+    own('deep', [sym.toLowerCase() + '@aggTrade', sym.toLowerCase() + '@bookTicker']);
+
+    // إعداد كائن التحليل
+    const L = c4;
+    const price = getLiveTicker(sym)?.price || L[L.length - 1].c;
+    const kClosed = L.filter(v => v.x === true);
+    const a = plan4h(sym, kClosed, price);
+    a.L = L;
+    a.k = kClosed;
+    a.price = price;
+    a.ind = computeIndicatorsForChart(L);
+    a.x = adv(kClosed);
+    a.pats = patterns(kClosed, atr(kClosed));
+    a.lv = levels(kClosed);
+
+    // EW
+    if (c1 && c15) a.earlyWave = earlyWave(c1, c15, L, sym);
+
+    // رسم
+    draw(a);
+    bindCanvasEvents();
+
+    // بطاقة
+    if (card){
+      card.innerHTML = renderDeepCard(a);
+      scheduleRegisterPriceCells();
+    }
+
+    // خطة
+    if (plan) plan.innerHTML = renderDeepPlan(a);
+
+  } catch(e){
+    if (card) card.innerHTML = `<div class="text-rose-400 text-center py-8">تعذّر التحميل: ${e.message}</div>`;
+  }
+}
+
+function computeIndicatorsForChart(L){
+  const c = L.map(v => v.c);
+  const mc = macdS(c);
+  return {
+    c,
+    rsi: rsiS(c),
+    macd: mc,
+    m: mc.m, g: mc.g, h: mc.h,
+    e20: emaS(c, 20),
+    e50: emaS(c, 50),
+    e200: emaS(c, 200),
+    bb: bbArr(c),
+    adx: adxS(L)
+  };
+}
+
+function plan4h(sym, k, price){
+  const at = atr(k);
+  const lv = levels(k);
+  const gaps = fvgs(k);
+  const patsRaw = patterns(k, at);
+  const pats = patsRaw;
+
+  const m = pats[0] || null;
+  const r30 = k.slice(-30);
+  let name = m ? m.name : 'لا يوجد نموذج مكتمل';
+  let bias = m ? (m.dir == 'ثنائي' ? 'محايد' : m.dir) : 'محايد';
+  let state = m ? m.status : '—';
+  let U = m ? m.U : Math.max(...r30.map(v => v.h));
+  let D = m ? m.D : Math.min(...r30.map(v => v.l));
+  const plans = [];
+
+  if (m){
+    let isLong = false, isShort = false;
+    if (m.brk === 'up' && m.up) isLong = true;
+    else if (m.brk === 'dn' && m.dn) isShort = true;
+    else if (m.dir === 'صاعد' && m.up) isLong = true;
+    else if (m.dir === 'هابط' && m.dn) isShort = true;
+    else if (m.dir === 'ثنائي'){ if (m.up) isLong = true; if (m.dn) isShort = true; }
+
+    if (isLong){
+      const o = m.up;
+      const trig = o.trig;
+      if (m.brk === 'up'){
+        if (price > trig + 0.3 * at){
+          plans.push({ t: `⚠ اختراق سابق — السعر ابتعد`, z: null, sl: o.stop, tp1: null, tp2: price + (o.tgt - trig), rr: 0, status: 'chase', statusLabel: 'لا تطارد', patternName: m.name });
+        } else if (price >= trig - 0.1 * at){
+          const risk = price - o.stop;
+          plans.push({ t: `إعادة اختبار خط العنق`, z: [trig * 0.998, trig + 0.15 * at], sl: o.stop, tp1: price + 1.0 * risk, tp2: o.tgt, rr: (o.tgt - price) / Math.max(risk, 1e-9), status: 'direct', statusLabel: 'دخول مباشر', patternName: m.name });
+        } else {
+          plans.push({ t: `⚠ اختراق فاشل`, z: null, sl: o.stop, tp1: null, tp2: null, rr: 0, status: 'chase', statusLabel: 'لا تطارد', patternName: m.name });
+        }
+      } else {
+        if (price >= trig - 0.1 * at){
+          const risk = price - o.stop;
+          plans.push({ t: `دخول قرب خط العنق`, z: [Math.min(trig, price), trig + 0.15 * at], sl: o.stop, tp1: price + 1.0 * risk, tp2: o.tgt, rr: (o.tgt - price) / Math.max(risk, 1e-9), status: 'direct', statusLabel: 'دخول مباشر', patternName: m.name });
+        } else {
+          const z1 = trig + 0.3 * at;
+          const en = (trig + z1) / 2;
+          const risk = en - o.stop;
+          plans.push({ t: `انتظار إغلاق فوق ${fmtPrice(trig)}`, z: [trig, z1], sl: o.stop, tp1: en + 1.0 * risk, tp2: o.tgt, rr: (o.tgt - en) / Math.max(risk, 1e-9), status: 'wait', statusLabel: 'انتظار', patternName: m.name });
+        }
+      }
+    }
+
+    if (isShort){
+      const o = m.dn;
+      const trig = o.trig;
+      if (m.brk === 'dn'){
+        if (price < trig - 0.3 * at){
+          plans.push({ t: `⚠ كسر سابق — السعر ابتعد`, z: null, sl: o.stop, tp1: null, tp2: price - (trig - o.tgt), rr: 0, status: 'chase', statusLabel: 'لا تطارد', patternName: m.name });
+        } else if (price <= trig + 0.1 * at){
+          const risk = o.stop - price;
+          plans.push({ t: `إعادة اختبار خط العنق`, z: [trig - 0.15 * at, trig * 1.002], sl: o.stop, tp1: price - 1.0 * risk, tp2: o.tgt, rr: (price - o.tgt) / Math.max(risk, 1e-9), status: 'direct', statusLabel: 'دخول مباشر', patternName: m.name });
+        } else {
+          plans.push({ t: `⚠ كسر فاشل`, z: null, sl: o.stop, tp1: null, tp2: null, rr: 0, status: 'chase', statusLabel: 'لا تطارد', patternName: m.name });
+        }
+      } else {
+        if (price <= trig + 0.1 * at){
+          const risk = o.stop - price;
+          plans.push({ t: `بيع قرب خط العنق`, z: [trig - 0.15 * at, Math.max(trig, price)], sl: o.stop, tp1: price - 1.0 * risk, tp2: o.tgt, rr: (price - o.tgt) / Math.max(risk, 1e-9), status: 'direct', statusLabel: 'دخول مباشر', patternName: m.name });
+        } else {
+          const z1 = trig - 0.3 * at;
+          const en = (trig + z1) / 2;
+          const risk = o.stop - en;
+          plans.push({ t: `انتظار إغلاق تحت ${fmtPrice(trig)}`, z: [z1, trig], sl: o.stop, tp1: en - 1.0 * risk, tp2: o.tgt, rr: (en - o.tgt) / Math.max(risk, 1e-9), status: 'wait', statusLabel: 'انتظار', patternName: m.name });
+        }
+      }
+    }
+  }
+
+  plans.forEach(p => {
+    if (p.z && p.sl != null && p.tp2 != null){
+      const en = (p.z[0] + p.z[1]) / 2;
+      const risk = Math.abs(en - p.sl);
+      if (risk > 0){
+        p.rr = Math.abs(p.tp2 - en) / risk;
+        p.tp1 = (en + p.tp2) / 2;
+      }
+    }
+  });
+
+  if (!plans.length){
+    plans.push({
+      t: 'لا توجد خطة دخول واضحة', z: null, sl: null, tp1: null, tp2: null, rr: 0,
+      status: 'none', statusLabel: 'لا خطة',
+      patternName: m ? m.name : null
+    });
+  }
+
+  return { sym, price, k, lv, gaps, pats, patsRaw, name, bias, state, U, D, at, plans,
+           nph: m ? m.nph : 0, npl: m ? m.npl : 0 };
+}
+
+function renderDeepCard(a){
+  const lp = getLiveTicker(a.sym);
+  const price = lp?.price || a.price;
+  const change = lp?.change || 0;
+  const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  const r = analysisCache[a.sym];
+
+  return `
+    <div class="card p-4">
+      <div class="flex justify-between items-start mb-3 flex-wrap gap-3">
+        <div>
+          <div class="text-xl font-extrabold flex items-center gap-2">
+            ${a.sym.replace('USDT','')}
+            <span class="live-dot ws-on"></span>
+            ${r ? renderPhaseBadge(r.phase, r.phaseLabel) : ''}
+            ${r ? renderCrossBadge(r.crossValidation) : ''}
+          </div>
+          <div class="text-lg font-mono font-bold" data-live-symbol="${a.sym}">${fmtPrice(price)}</div>
+          <div class="text-[11px] font-mono ${changeColor}">${fmtPct(change)}</div>
+        </div>
+        ${r ? `<div class="text-right">
+          <div class="text-emerald-400 text-3xl font-extrabold font-mono">${r.unifiedScore}</div>
+          <div class="text-[9px] text-slate-500">Unified Score</div>
+        </div>` : ''}
+      </div>
+      ${r ? `
+        <div class="tiles">
+          <div class="tile"><span>Score (5M)</span><b>${r.score}</b></div>
+          <div class="tile"><span>Early Score</span><b>${r.earlyScore}</b></div>
+          <div class="tile"><span>RVOL</span><b>${r.rvol?.toFixed(2)}x</b></div>
+          <div class="tile"><span>Taker</span><b>${r.taker ? (r.taker*100).toFixed(0) : '—'}%</b></div>
+          <div class="tile"><span>RSI Live</span><b>${r.rsi5Live?.toFixed(1) || '—'}</b></div>
+          <div class="tile"><span>ADX</span><b>${r.adx?.toFixed(0) || '—'}</b></div>
+          <div class="tile"><span>Phase</span><b>${r.phase}</b></div>
+          <div class="tile"><span>R:R</span><b>${r.rr?.toFixed(2) || '—'}</b></div>
+        </div>
+        ${r.earlyWave ? `<div class="mt-3 p-2 rounded" style="background:#a855f722;border:1px solid #a855f766">
+          <div class="text-[11px] font-bold text-purple-300 mb-1">🌊 Early Wave: ${r.earlyWave.state} (${r.earlyWave.score.toFixed(1)}/10)</div>
+          <div class="grid grid-cols-2 gap-1 text-[10px]">${r.earlyWave.checks.map(x =>
+            `<div>${x[1] == null ? '◯' : x[1] ? '✓' : '×'} ${x[0]}</div>`).join('')}
+          </div>
+        </div>` : ''}
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderDeepPlan(a){
+  if (!a.plans || !a.plans.length) return '';
+  return `
+    <div class="card p-4 mt-3">
+      <div class="text-sm font-bold mb-3">📐 خطة الدخول (${a.name})</div>
+      <table>
+        <thead><tr>
+          <th>السيناريو</th><th>منطقة الدخول</th><th>وقف</th><th>هدف 1</th><th>هدف 2</th><th>R:R</th>
+        </tr></thead>
+        <tbody>
+          ${a.plans.map(p => `
+            <tr>
+              <td>${p.statusLabel ? `<span class="badge" style="background:${
+                p.status === 'direct' ? '#10b98122;color:#10b981' :
+                p.status === 'wait' ? '#fbbf2422;color:#fbbf24' :
+                p.status === 'chase' ? '#f43f5e22;color:#f43f5e' : '#64748b22;color:#94a3b8'
+              }">${p.statusLabel}</span> ` : ''}${p.t}</td>
+              <td>${p.z ? `${fmtPrice(p.z[0])} – ${fmtPrice(p.z[1])}` : '—'}</td>
+              <td class="text-rose-400">${p.sl ? fmtPrice(p.sl) : '—'}</td>
+              <td class="text-emerald-400">${p.tp1 ? fmtPrice(p.tp1) : '—'}</td>
+              <td class="text-emerald-400">${p.tp2 ? fmtPrice(p.tp2) : '—'}</td>
+              <td class="font-mono">${p.rr ? p.rr.toFixed(2) : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ==================================================================
+   🎯 Category Modal
+   ================================================================== */
+
+const CATEGORY_CONFIG = {
+  confirmed: {
+    title: '🔒 إشارات مؤكدة (Cross-Validated)',
+    subtitle: 'اتفاق scanner5 + Dashboard v7',
+    icon: '🔒',
+    iconBg: 'bg-emerald-500/20 text-emerald-400',
+    filter: r => r.crossValidation && r.crossValidation.status === 'CONFIRMED',
+    sort: (a, b) => b.unifiedScore - a.unifiedScore
+  },
+  gold: {
+    title: '🥇 إشارات GOLD',
+    subtitle: 'أقوى الإشارات (scanner5)',
+    icon: '🥇',
+    iconBg: 'bg-amber-500/20 text-amber-400',
+    filter: r => r.signalType === 'GOLD',
+    sort: (a, b) => b.unifiedScore - a.unifiedScore
+  },
+  early: {
+    title: '⚡ إشارات مبكرة',
+    subtitle: 'Early Score ≥ 62',
+    icon: '⚡',
+    iconBg: 'bg-purple-500/20 text-purple-400',
+    filter: r => r.signalType === 'EARLY' || r.earlyScore >= 62,
+    sort: (a, b) => b.earlyScore - a.earlyScore
+  },
+  growing: {
+    title: '📈 مرحلة النمو',
+    subtitle: 'RVOL 1.2-2.5x + CVD موجب',
+    icon: '📈',
+    iconBg: 'bg-cyan-500/20 text-cyan-400',
+    filter: r => r.phase === 'GROWING' || r.phase === 'BREAKOUT',
+    sort: (a, b) => b.unifiedScore - a.unifiedScore
+  },
+  peak: {
+    title: '🚨 تحذيرات الذروة',
+    subtitle: 'RSI > 80 أو Taker > 72%',
+    icon: '🚨',
+    iconBg: 'bg-rose-500/20 text-rose-400',
+    filter: r => r.phase === 'PEAK' || (r.peakWarnings && r.peakWarnings.length > 0) || r.change24h > CFG.VERY_LATE_CHANGE_24H,
+    sort: (a, b) => b.change24h - a.change24h
+  }
+};
+
+function openCategoryModal(category){
+  const config = CATEGORY_CONFIG[category];
+  if (!config) return;
+  currentCategory = category;
+  const iconEl = $('category-icon');
+  if (iconEl){
+    iconEl.className = `w-10 h-10 rounded-lg flex items-center justify-center text-xl ${config.iconBg}`;
+    iconEl.textContent = config.icon;
+  }
+  $('category-title').textContent = config.title;
+  $('category-subtitle').textContent = config.subtitle;
+  renderCategoryList();
+  const modal = $('categoryModal');
+  modal.classList.add('on');
+}
+
+function closeCategoryModal(){
+  const modal = $('categoryModal');
+  modal.classList.remove('on');
+  currentCategory = null;
+}
+
+function renderCategoryList(){
+  if (!currentCategory) return;
+  const config = CATEGORY_CONFIG[currentCategory];
+  const body = $('category-body');
+  const countEl = $('category-count');
+  if (!body) return;
+  const all = Object.values(analysisCache);
+  const filtered = all.filter(config.filter).sort(config.sort);
+  if (countEl) countEl.textContent = `${filtered.length} عملة`;
+  if (!filtered.length){
+    body.innerHTML = `<div class="col-span-full text-center py-12">
+      <i class="fa-solid fa-inbox text-4xl text-slate-600 mb-3 block"></i>
+      <p class="text-slate-400 text-sm">لا توجد عملات في هذه الفئة</p>
+    </div>`;
+    return;
+  }
+  body.innerHTML = filtered.map(r => renderCategoryCard(r)).join('');
+  scheduleRegisterPriceCells();
+}
+
+function renderCategoryCard(r){
+  const lp = getLiveTicker(r.symbol);
+  const price = lp?.price ?? r.close;
+  const change = lp?.change ?? r.change24h ?? 0;
+  const changeColor = change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  const scoreColor = getScoreColor(r.unifiedScore);
+  const pnl = ((price - r.entry) / r.entry) * 100;
+  const pnlColor = pnl >= 0 ? 'text-emerald-400' : 'text-rose-400';
+  return `
+    <div class="card p-3">
+      <div class="flex justify-between items-start mb-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-sm font-bold">${r.symbol.replace('USDT','')}</span>
+          <span class="live-dot ws-on"></span>
+          ${renderPhaseBadge(r.phase, r.phaseLabel)}
+          ${renderCrossBadge(r.crossValidation)}
+        </div>
+        <div class="${scoreColor} text-lg font-bold font-mono">${r.unifiedScore}</div>
+      </div>
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs font-mono font-bold" data-live-symbol="${r.symbol}">${fmtPrice(price)}</span>
+        <span class="text-[10px] font-mono ${changeColor}">${fmtPct(change)}</span>
+      </div>
+      <div class="grid grid-cols-4 gap-1.5 text-[10px] mb-2">
+        <div class="text-center"><div class="text-slate-500 text-[9px]">Score</div><b>${r.score}</b></div>
+        <div class="text-center"><div class="text-slate-500 text-[9px]">Early</div><b class="text-purple-400">${r.earlyScore}</b></div>
+        <div class="text-center"><div class="text-slate-500 text-[9px]">RVOL</div><b>${r.rvol?.toFixed(1) || '—'}x</b></div>
+        <div class="text-center"><div class="text-slate-500 text-[9px]">P&L</div><b class="${pnlColor}">${fmtPct(pnl)}</b></div>
+      </div>
+      <div class="grid grid-cols-3 gap-1.5 text-[9px]">
+        <div class="text-center"><div class="text-slate-500">دخول</div><b>${fmtPrice(r.entry)}</b></div>
+        <div class="text-center"><div class="text-slate-500">هدف</div><b class="text-emerald-400">${fmtPrice(r.tp)}</b></div>
+        <div class="text-center"><div class="text-slate-500">وقف</div><b class="text-rose-400">${fmtPrice(r.sl)}</b></div>
+      </div>
+      <div class="text-center text-[10px] text-slate-500 mt-2">R:R = <b class="text-emerald-400">${r.rr?.toFixed(2)}:1</b></div>
+      <div class="mt-2 pt-2 border-t border-slate-800/50 flex gap-2">
+        <button onclick="addToWatchlist('${r.symbol}')" class="flex-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-[9px] font-bold">
+          <i class="fa-solid fa-star mr-1"></i>مفضلة
+        </button>
+        <button onclick="openCategoryDeep('${r.symbol}')" class="flex-1 px-2 py-1 bg-slate-800 text-slate-300 rounded text-[9px] font-bold">
+          <i class="fa-solid fa-chart-area mr-1"></i>تحليل
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function openCategoryDeep(symbol){
+  closeCategoryModal();
+  switchTab('deep');
+  const inp = $('deep-search');
+  if (inp) inp.value = symbol.replace('USDT', '');
+  openDeepAnalysis(symbol);
+}
+/* ==================================================================
+   🎮 UI Handlers
+   ================================================================== */
+
+function switchTab(tab){
+  currentTab = tab;
+  const tabs = ['signals', 'confirmed', 'earlywave', 'emerging', 'growing', 'early',
+                'peaks', 'sectors', 'deep', 'gainers', 'all', 'watchlist', 'history'];
+  tabs.forEach(t => {
+    const panel = $('panel-' + t);
+    const btn = $('tab-' + t);
+    if (panel) panel.classList.toggle('hidden', t !== tab);
+    if (btn) btn.className = `px-4 py-2.5 text-xs font-bold rounded-lg shrink-0 transition-all ${t === tab ? 'tab-active' : 'tab-inactive'}`;
+  });
+
+  const results = Object.values(analysisCache);
+  if (tab === 'signals') renderSignals(results);
+  if (tab === 'confirmed') renderConfirmed(results);
+  if (tab === 'earlywave') renderEarlyWave(results);
+  if (tab === 'emerging') renderEmerging(results);
+  if (tab === 'growing') renderGrowing(results);
+  if (tab === 'early') renderEarlySignals(results);
+  if (tab === 'peaks') renderPeaks(results);
+  if (tab === 'sectors') renderSectors();
+  if (tab === 'gainers') renderGainers();
+  if (tab === 'all') renderAllCoins();
+  if (tab === 'watchlist') renderWatchlistPanel();
+  if (tab === 'history') renderHistory();
+  if (tab === 'deep'){
+    const dl = $('deep-dl');
+    if (dl && !dl.innerHTML.trim()){
+      dl.innerHTML = Object.keys(analysisCache)
+        .sort()
+        .map(s => `<option value="${s.replace('USDT', '')}">`)
+        .join('');
+    }
+    bindCanvasEvents();
+  }
+}
+
+function setApiStatus(text, ok=true){
+  const el = $('api-status');
+  if (!el) return;
+  el.className = `px-3 py-1 text-[10px] font-semibold rounded-full ${ok
+    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+    : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'} flex items-center gap-1.5 font-mono`;
+  el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${ok ? 'bg-emerald-500 animate-ping' : 'bg-rose-500'}"></span>${text}`;
+}
+
+function updateProgress(pct, text){
+  const pc = $('progressContainer');
+  const pb = $('progressBar');
+  if (pc && pb){
+    pc.classList.add('active');
+    pb.style.width = `${Math.min(100, pct)}%`;
+  }
+  if (text) setApiStatus(text, true);
+}
+
+function showToast(msg, duration=2500){
+  const el = $('toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('opacity-0');
+  clearTimeout(showToast.t);
+  showToast.t = setTimeout(() => el.classList.add('opacity-0'), duration);
+}
+
+function playSound(type){
+  if (!audioEnabled) return;
+  let freq = 880, duration = 0.15, count = 1;
+  if (type === 'CONFIRMED'){ freq = 1400; duration = 0.35; count = 3; }
+  else if (type === 'GOLD'){ freq = 1200; duration = 0.4; count = 2; }
+  else if (type === 'EARLY'){ freq = 1500; duration = 0.2; count = 1; }
+  else if (type === 'WON'){ freq = 1600; duration = 0.5; count = 3; }
+  else if (type === 'LOST'){ freq = 400; duration = 0.5; count = 2; }
+  for (let i = 0; i < count; i++){
+    setTimeout(() => {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.frequency.value = freq;
+        gain.gain.value = 0.05;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch(e){}
+    }, i * 250);
+  }
+}
+
+function toggleAudio(){
+  audioEnabled = !audioEnabled;
+  const icon = $('audio-icon');
+  if (icon) icon.className = `fa-solid ${audioEnabled ? 'fa-volume-high text-emerald-400' : 'fa-volume-xmark text-slate-500'}`;
+  showToast(audioEnabled ? '🔊 الصوت مُفعّل' : '🔇 الصوت مُتوقف');
+}
+
+function setTradeTimeframe(tf){
+  tradeTimeframe = tf;
+  ['5m', '15m', '1h', '4h'].forEach(t => {
+    const btn = $(`tf-btn-${t}`);
+    if (btn){
+      if (t === tf){
+        btn.className = 'px-3 py-1 bg-emerald-500 text-slate-950 rounded-full text-[10px] font-bold';
+      } else {
+        btn.className = 'px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-[10px] font-bold';
+      }
+    }
+  });
+  const results = Object.values(analysisCache);
+  if (currentTab === 'signals') renderSignals(results);
+  if (currentTab === 'early') renderEarlySignals(results);
+  if (currentTab === 'growing') renderGrowing(results);
+  showToast(`✅ الفريم: ${tf}`);
+}
+
+/* ==================================================================
+   📊 Stats + KPI Updates
+   ================================================================== */
+
+function updateStats(){
+  const golds = Object.values(analysisCache).filter(r => r.signalType === 'GOLD').length;
+  const early = Object.values(analysisCache).filter(r => r.signalType === 'EARLY').length;
+  const growing = Object.values(analysisCache).filter(r => r.phase === 'GROWING' || r.phase === 'BREAKOUT').length;
+  const peaks = Object.values(analysisCache).filter(r => r.phase === 'PEAK').length;
+  const confirmed = Object.values(analysisCache).filter(r => r.crossValidation?.status === 'CONFIRMED').length;
+
+  const el = id => $(id);
+  if (el('stat-confirmed')) el('stat-confirmed').textContent = confirmed;
+  if (el('stat-gold')) el('stat-gold').textContent = golds;
+  if (el('stat-early')) el('stat-early').textContent = early;
+  if (el('stat-growing')) el('stat-growing').textContent = growing;
+  if (el('stat-peak')) el('stat-peak').textContent = peaks;
+
+  // Badges
+  const sbadge = el('signals-count-badge');
+  if (sbadge) sbadge.textContent = Object.values(analysisCache).filter(r =>
+    (r.signalType === 'GOLD' || r.signalType === 'BUY' || r.signalType === 'EARLY') && r.phase !== 'PEAK').length;
+
+  const cbadge = el('confirmed-count-badge');
+  if (cbadge) cbadge.textContent = confirmed;
+}
+
+function updateHotSector(){
+  const stats = {};
+  for (const [name, data] of Object.entries(SECTORS)){
+    let sum = 0, count = 0;
+    for (const sym of data.coins){
+      const r = analysisCache[sym];
+      const lp = getLiveTicker(sym);
+      if (r){
+        sum += (lp?.change ?? r.change24h ?? 0);
+        count++;
+      }
+    }
+    if (count > 0) stats[name] = { name, avg: sum / count, icon: data.icon };
+  }
+  const sorted = Object.values(stats).sort((a, b) => b.avg - a.avg);
+  const el = $('stat-hot-sector');
+  if (el && sorted.length){
+    el.textContent = sorted.slice(0, 2).map(s => `${s.icon} ${s.name}`).join(' • ');
+  }
+}
+
+function updateRegimeBadge(regime){
+  const badge = $('regime-badge');
+  const text = $('regime-text');
+  if (!badge || !text) return;
+  let label = 'غير معروف';
+  let cls = 'bg-slate-800 text-slate-300 border-slate-700';
+  switch(regime.regime){
+    case 'TRENDING': label = '📈 اتجاه'; cls = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; break;
+    case 'RANGING': label = '↔️ عرضي'; cls = 'bg-amber-500/10 text-amber-400 border-amber-500/30'; break;
+    case 'VOLATILE': label = '⚡ متذبذب'; cls = 'bg-rose-500/10 text-rose-400 border-rose-500/30'; break;
+    case 'QUIET': label = '😴 هادئ'; cls = 'bg-slate-500/10 text-slate-400 border-slate-500/30'; break;
+  }
+  text.textContent = label;
+  badge.className = `px-3 py-1 text-[10px] font-semibold rounded-full border ${cls} font-mono`;
+}
+
+/* ==================================================================
+   📥 Export CSV
+   ================================================================== */
+
+window.exportCSV = function(){
+  if (!signalHistory.length){ showToast('❌ لا توجد إشارات'); return; }
+  const headers = ['Time', 'Symbol', 'Type', 'Source', 'Unified', 'Score', 'Early',
+                   'Phase', 'CrossStatus', 'Entry', 'TP', 'TP2', 'SL', 'R:R',
+                   'CurrentPrice', 'PnL%', 'Status', 'Change24h%'];
+  const rows = signalHistory.map(s => {
+    const lp = getLiveTicker(s.symbol);
+    return [
+      new Date(s.timestamp).toISOString(), s.symbol, s.signalType, s.source || '',
+      s.unifiedScore || '', s.score, s.earlyScore,
+      s.phase || '', s.crossValidation?.status || '',
+      s.entry, s.tp, s.tp2 || '', s.sl, s.rr?.toFixed(2) || '',
+      s.currentPrice, s.pnlPct.toFixed(2), s.status,
+      (lp?.change ?? s.change24h ?? 0).toFixed(2)
+    ];
+  });
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `unified_signals_${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ تم التصدير');
+};
+
+/* ==================================================================
+   🚀 Boot
+   ================================================================== */
+
+async function boot(){
+  console.log('🚀 Unified Trader v1.0 starting...');
+  console.log('📊 MAX_WEIGHT_SUM =', MAX_WEIGHT_SUM);
+  console.log('⚡ EARLY =', CFG.EARLY_SCORE, '| ENTRY =', CFG.ENTRY_SCORE, '| CONFIRMED =', CFG.CONFIRMED_SCORE);
+  console.log('🎯 الفريم المُختار:', tradeTimeframe);
+
+  const endpoint = await detectWorkingEndpoint();
+  if (!endpoint){
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:#0a0e1a;color:#f1f5f9;font-family:Cairo,sans-serif;text-align:center;">
+        <div style="max-width:500px;">
+          <div style="font-size:60px;margin-bottom:20px;">🚫</div>
+          <h1 style="color:#f43f5e;font-size:20px;margin-bottom:15px;">لا يمكن الاتصال بـ Binance</h1>
+          <p style="color:#94a3b8;margin-bottom:20px;">جميع النطاقات فشلت.</p>
+          <button onclick="location.reload()" style="background:#10b981;color:#0a0e1a;border:none;padding:12px 30px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">🔄 إعادة المحاولة</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  await loadAvailableSymbols();
+  loadSignalHistory();
+  loadCustomWatchlist();
+  loadKlineCache();
+  updateWatchlistBadge();
+  renderHistory();
+  updateStats();
+
+  // ربط Events
+  bindCanvasEvents();
+
+  // فتح Deep عند البحث
+  const deepInput = $('deep-search');
+  if (deepInput){
+    deepInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') openDeepAnalysis();
+    });
+  }
+
+  // Observer لتحديث priceCells
+  const observer = new MutationObserver(() => scheduleRegisterPriceCells());
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // المسح الأولي
+  await scanMarkets();
+
+  // مؤقتات
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (Date.now() - lastRefresh >= CFG.REFRESH_MS) scanMarkets();
+  }, 5000);
+
+  if (liveUpdateTimer) clearInterval(liveUpdateTimer);
+  liveUpdateTimer = setInterval(updateLivePricesQuick, CFG.LIVE_UPDATE_MS);
+
+  if (priceAgeTimer) clearInterval(priceAgeTimer);
+  priceAgeTimer = setInterval(updatePriceAge, 1000);
+
+  setInterval(() => {
+    if (signalHistory.length) saveSignalHistory();
+    if (Object.keys(klineCache).length) saveKlineCache();
+  }, 30000);
+
+  setInterval(() => {
+    if (HUB.open) hubConnect();   // تحديث الاشتراكات كل دقيقة
+  }, 60000);
+
+  // المراقب الصامت
+  setInterval(hubStatus, 2000);
+
+  console.log('✅ Unified Trader v1.0 ready');
+}
+
+window.onload = boot;
